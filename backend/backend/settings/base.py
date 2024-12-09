@@ -2,9 +2,8 @@
 # Import Statements and Dependencies
 ###############################################################################
 
-from pathlib import Path
 import os
-import dj_database_url
+from pathlib import Path
 
 ###############################################################################
 # Core Settings
@@ -36,7 +35,7 @@ CUSTOM_APPS = [
 
 # Third-party apps
 THIRD_PARTY_APPS = [
-    # Add third party dependencies here
+    'rest_framework',
 ]
 
 # Combine all apps
@@ -106,4 +105,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 ###############################################################################
 # Model Settings
 ###############################################################################
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField' 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
