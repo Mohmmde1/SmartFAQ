@@ -1,12 +1,15 @@
 import os
 from pathlib import Path
+
+import dj_database_url
 from dotenv import load_dotenv
+
+from .base import *  # noqa: F403
 
 # Load environment variables from .env.local
 env_path = Path(__file__).resolve().parent.parent.parent / '.env.local'
 load_dotenv(env_path)
 
-from .base import *
 
 ###############################################################################
 # Database Settings

@@ -3,17 +3,22 @@
 ###############################################################################
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 ###############################################################################
 # Core Settings
 ###############################################################################
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-3ry2+dao1s6uwgw@8_m2-)9e%+0m9w0%56^7@!ybbm-x$@&5*^')
+SECRET_KEY = os.environ.get(
+                            'SECRET_KEY',
+                            'django-insecure-3ry2+dao1s6uwgw@8_m2-)9e%+0m9w0%56^7@!ybbm-x$@&5*^'
+                            )
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 ROOT_URLCONF = 'backend.urls'
 WSGI_APPLICATION = 'backend.wsgi.application'
+ROOT_URLCONF = 'backend.urls'
 
 ###############################################################################
 # Application Settings
@@ -26,22 +31,36 @@ DJANGO_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites'
 ]
 
 # Custom project apps
 CUSTOM_APPS = [
-    # Add your custom apps here
+    'auths',
 ]
 
 # Third-party apps
 THIRD_PARTY_APPS = [
+    # DRF
     'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
+    # allauth + dj-rest-auth
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 # Combine all apps
 INSTALLED_APPS = DJANGO_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
+    # CORS MIDDLEWARE
+    'corsheaders.middleware.CorsMiddleware',
+    # DJANGO DEFAULT MIDDLEWARE
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -49,6 +68,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # ALLAUTH MIDDLEWARE
+    'allauth.account.middleware.AccountMiddleware'
 ]
 
 ###############################################################################
@@ -88,6 +109,20 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Use Email as the primary identifier
+AUTH_USER_MODEL = 'auths.User'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_VERIFICATION = "none"
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 ###############################################################################
 # Internationalization Settings
 ###############################################################################
@@ -106,3 +141,71 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # Model Settings
 ###############################################################################
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+###############################################################################
+# REST Framework Settings
+###############################################################################
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}
+
+###############################################################################
+# CORS Settings
+###############################################################################
+CORS_ORIGIN_ALLOW_ALL = True
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost',
+    'https://localhost',
+    'http://127.0.0.1',
+    'https://127.0.0.1'
+]
+
+###############################################################################
+# Allauth
+###############################################################################
+SITE_ID = 1
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'offline',
+        }
+    }
+}
+SOCIALACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
+
+###############################################################################
+# JWT Settings
+###############################################################################
+
+REST_USE_JWT = True
+JWT_SECRET_KEY = SECRET_KEY
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'SIGNING_KEY': JWT_SECRET_KEY,
+}
+
+###############################################################################
+# Dj-Rest-Auth Settings
+###############################################################################
+REST_AUTH = {
+    'USE_JWT': True,
+    'JWT_AUTH_HTTPONLY':False, # Important for the frontend to access the refresh token
+}
