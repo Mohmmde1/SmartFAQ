@@ -106,20 +106,28 @@ docker-down:
 docker-logs:
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) logs -f
 
-docker-shell:
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec web bash
+docker-backend-shell:
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec backend bash
+
+docker-frontend-shell:
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec frontend sh
 
 docker-migrate:
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec web $(PYTHON) backend/manage.py migrate
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec backend $(PYTHON) manage.py migrate
 
 docker-makemigrations:
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec web $(PYTHON) backend/manage.py makemigrations
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec backend $(PYTHON) manage.py makemigrations
 
 docker-superuser:
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec web $(PYTHON) backend/manage.py createsuperuser
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec backend $(PYTHON) manage.py createsuperuser
 
 docker-test:
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec web $(PYTHON) backend/manage.py test
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec backend $(PYTHON) manage.py test
+
+install-deps:
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec -it backend poetry export --without-hashes --output requirements.txt
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) exec -it backend pip install -r requirements.txt
+
 
 docker-clean:
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) down -v --remove-orphans
