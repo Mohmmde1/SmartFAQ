@@ -17,6 +17,14 @@ echo "PostgreSQL is ready!"
 echo "Running database management script..."
 ./managedb.sh create
 
+# Generate requirements.txt using Poetry
+echo "Generating requirements.txt from Poetry..."
+poetry export --without-hashes --output requirements.txt
+
+# Install dependencies using pip
+echo "Installing dependencies using pip..."
+pip install -r requirements.txt
+
 # Apply database migrations
 echo "Applying database migrations..."
 python manage.py migrate
