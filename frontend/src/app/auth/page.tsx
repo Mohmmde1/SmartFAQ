@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { signIn } from 'next-auth/react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from 'next/link'
 import { FcGoogle } from 'react-icons/fc'
@@ -24,11 +25,13 @@ export default function AuthPage() {
 
     const handleGoogleLogin = async () => {
         setIsLoading(true)
-        // Here you would implement the actual Google login logic
-        console.log('Logging in with Google')
-        // Simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        setIsLoading(false)
+        try {
+            await signIn('google', { callbackUrl: '/' })
+        } catch (error) {
+            console.error('Error signing in with Google', error)
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
