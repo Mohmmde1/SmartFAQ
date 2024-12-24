@@ -1,17 +1,53 @@
 import NextAuth, { type User, type Session } from "next-auth"
+import axios from "axios"
 import GoogleProvider from "next-auth/providers/google"
 import { JWT } from "next-auth/jwt"
-import { signIn } from "next-auth/react";
+import { JwtUtils, UrlUtils } from "@/lib/utils";
+
+namespace NextAuthUtils {
+    interface RefreshTokenResponse {
+        access: string;
+        refresh: string;
+    }
+
+    export const refreshToken = async function (refreshToken: string): Promise<[string | null, string | null]> {
+        try {
+            const response = await axios.post<RefreshTokenResponse>(
+                UrlUtils.makeUrl(
+                    process.env.BACKEND_API_BASE || '',
+                    "auth",
+                    "token",
+                    "refresh",
+                ),
+                {
+                    refresh: refreshToken,
+                },
+            );
+
+            const { access, refresh } = response.data;
+            return [access, refresh];
+        } catch {
+            return [null, null];
+        }
+    };
+}
 
 export const authOptions = {
-
+    secret: process.env.NEXTAUTH_SECRET,
+    session: {
+        jwt: true,
+        maxAge: 24 * 60 * 60, // 24 hours
+    },
+    jwt: {
+        secret: process.env.JWT_SECRET,
+    },
+    debug: process.env.NODE_ENV === "development",
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || '',
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
             authorization: {
                 params: {
-                    redirect_uri: process.env.NEXTAUTH_URL + "/auth/callback/google",
                     scope: "openid email profile",
                     access_type: "offline", // Ensures you get a refresh token
                 },
@@ -21,11 +57,22 @@ export const authOptions = {
     ],
     callbacks: {
         async jwt({ token, account }: { token: JWT; account?: any }) {
-            console.log('jwt:', token);
+            console.log('JWT Callback Called:', {
+                hasAccount: !!account,
+                hasToken: !!token,
+                tokenExpired: token.accessToken ? JwtUtils.isJwtExpired(token.accessToken as string) : null,
+                timestamp: new Date().toISOString()
+            });
+
+            // Initial sign in
             if (account) {
-                console.log('account:', account);
                 try {
-                    const response = await fetch('http://localhost:8000/api/v1/auth/google/', {
+                    const url = UrlUtils.makeUrl(
+                        process.env.BACKEND_API_BASE || '',
+                        "auth",
+                        "google",
+                    );
+                    const response = await fetch(url, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -37,19 +84,33 @@ export const authOptions = {
                     });
 
                     const data = await response.json();
-                    token.accessToken = data.access_token;
-                    token.refreshToken = data.refresh_token;
-                    console.log(data);
+                    token.accessToken = data.access;
+                    token.refreshToken = data.refresh;
+                    return token;
                 } catch (error) {
                     console.error('Error during social auth:', error);
                 }
+            } else if (token) {
+                console.log("Checking token expiration");
+                if (token.accessToken && JwtUtils.isJwtExpired(token.accessToken as string)) {
+                    console.log("Token expired, refreshing token");
+                    if (token.refreshToken) {
+                        const [accessToken, refreshToken] = await NextAuthUtils.refreshToken(token.refreshToken as string);
+                        if (accessToken && refreshToken) {
+                            token.accessToken = accessToken;
+                            token.refreshToken = refreshToken;
+                        }
+                    } else {
+                        delete token.accessToken;
+                        delete token.refreshToken;
+                        console.log("No refresh token found");
+                    }
+                }
             }
+
             return token;
         },
         async session({ session, user }: { session: Session; user?: User }) {
-            if (user) {
-                // do whatever here
-            }
             return session;
         },
     },
