@@ -28,7 +28,7 @@ export default function Header() {
                     </Link>
                     {session ? (
                         <>
-                            <span className="text-sm font-medium">Welcome, {session.user?.name}</span>
+                            <span className="text-sm font-medium">Welcome, {session.user?.email}</span>
                             <Button onClick={() => signOut()} variant="ghost">Sign Out</Button>
                         </>
                     ) : (

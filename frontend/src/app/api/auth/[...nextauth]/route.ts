@@ -1,9 +1,9 @@
 import NextAuth, { type User, type Session } from "next-auth"
 import axios from "axios"
 import GoogleProvider from "next-auth/providers/google"
+import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt"
 import { JwtUtils, UrlUtils } from "@/lib/utils";
-
 namespace NextAuthUtils {
     interface RefreshTokenResponse {
         access: string;
@@ -31,6 +31,16 @@ namespace NextAuthUtils {
         }
     };
 }
+interface LoginResponse {
+    access: string;
+    refresh: string;
+    user: {
+        pk: number;
+        email: string;
+        first_name: string;
+        last_name: string;
+    }
+}
 
 export const authOptions = {
     secret: process.env.NEXTAUTH_SECRET,
@@ -43,9 +53,47 @@ export const authOptions = {
     },
     debug: process.env.NODE_ENV === "development",
     providers: [
+        CredentialsProvider({
+            name: "Credentials",
+            credentials: {
+                email: { label: "Username", type: "text" },
+                password: { label: "Password", type: "password" }
+            },
+            async authorize(credentials: any, req: any) {
+                const url = UrlUtils.makeUrl(
+                    process.env.BACKEND_API_BASE as string,
+                    "auth",
+                    "login",
+                );
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(credentials),
+                });
+
+                const data = await response.json() as LoginResponse;
+                console.log('Credentials authorize:', {
+                    credentials,
+                    data,
+                    response,
+                });
+                if (response.ok && data) {
+                    return {
+                        id: data.user.pk.toString(),
+                        email: data.user.email,
+                        name: data.user.first_name,
+                        accessToken: data.access,
+                        refreshToken: data.refresh
+                    }
+                }
+                return null;
+            }
+        }),
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || '',
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
             authorization: {
                 params: {
                     scope: "openid email profile",
@@ -65,10 +113,10 @@ export const authOptions = {
             });
 
             // Initial sign in
-            if (account) {
+            if (account && account.provider && account.provider === "google") {
                 try {
                     const url = UrlUtils.makeUrl(
-                        process.env.BACKEND_API_BASE || '',
+                        process.env.BACKEND_API_BASE as string,
                         "auth",
                         "google",
                     );
@@ -113,6 +161,7 @@ export const authOptions = {
         async session({ session, user }: { session: Session; user?: User }) {
             return session;
         },
+
     },
 };
 

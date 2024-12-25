@@ -9,18 +9,87 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from 'next/link'
 import { FcGoogle } from 'react-icons/fc'
+import { toast } from "sonner"
+
+interface SignUpFormData {
+    email: string;
+    password1: string;
+    password2: string;
+    first_name?: string;
+    last_name?: string;
+}
 
 export default function AuthPage() {
     const [isLoading, setIsLoading] = useState(false)
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         setIsLoading(true)
-        // Here you would implement the actual login/signup logic
-        console.log('Form submitted:', event.currentTarget.getAttribute('data-form-type'))
-        // Simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        setIsLoading(false)
+
+        const formData = new FormData(event.currentTarget)
+        const data: SignUpFormData = {
+            email: formData.get('signup-email') as string,
+            password1: formData.get('signup-password') as string,
+            password2: formData.get('signup-password') as string,
+            first_name: formData.get('signup-name') as string,
+        }
+        console.log('Form submitted:', data)
+
+        try {
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Registration failed')
+            }
+
+            toast.success("Registration successful!")
+            // Auto sign in after registration
+            await signIn('credentials', {
+                email: data.email,
+                password: data.password1,
+                callbackUrl: '/'
+            })
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Registration failed')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+    const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        setIsLoading(true)
+
+        const formData = new FormData(event.currentTarget)
+        const data = {
+            email: formData.get('login-email') as string,
+            password: formData.get('login-password') as string,
+        }
+
+        try {
+            const result = await signIn('credentials', {
+                email: data.email,
+                password: data.password,
+                redirect: false,
+            })
+
+            if (result?.error) {
+                throw new Error(result.error)
+            }
+
+            if (result?.ok) {
+                toast.success('Logged in successfully')
+                window.location.href = '/'
+            }
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Login failed')
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const handleGoogleLogin = async () => {
@@ -50,14 +119,26 @@ export default function AuthPage() {
                             <TabsTrigger value="signup">Sign Up</TabsTrigger>
                         </TabsList>
                         <TabsContent value="login">
-                            <form onSubmit={handleSubmit} data-form-type="login" className="space-y-4">
+                            <form onSubmit={handleLogin} className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="login-email">Email</Label>
-                                    <Input id="login-email" type="email" placeholder="Enter your email" required />
+                                    <Input
+                                        id="login-email"
+                                        name="login-email"
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        required
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="login-password">Password</Label>
-                                    <Input id="login-password" type="password" placeholder="Enter your password" required />
+                                    <Input
+                                        id="login-password"
+                                        name="login-password"
+                                        type="password"
+                                        placeholder="Enter your password"
+                                        required
+                                    />
                                 </div>
                                 <Button type="submit" className="w-full" disabled={isLoading}>
                                     {isLoading ? 'Logging in...' : 'Log In'}
@@ -65,18 +146,36 @@ export default function AuthPage() {
                             </form>
                         </TabsContent>
                         <TabsContent value="signup">
-                            <form onSubmit={handleSubmit} data-form-type="signup" className="space-y-4">
+                            <form onSubmit={handleSignUp} className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-name">Name</Label>
-                                    <Input id="signup-name" type="text" placeholder="Enter your name" required />
+                                    <Label htmlFor="name">Name</Label>
+                                    <Input
+                                        id="signup-name"
+                                        name="signup-name"
+                                        type="text"
+                                        placeholder="Enter your name"
+                                        required
+                                    />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-email">Email</Label>
-                                    <Input id="signup-email" type="email" placeholder="Enter your email" required />
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                        id="signup-email"
+                                        name="signup-email"
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        required
+                                    />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="signup-password">Password</Label>
-                                    <Input id="signup-password" type="password" placeholder="Create a password" required />
+                                    <Label htmlFor="password">Password</Label>
+                                    <Input
+                                        id="signup-password"
+                                        name="signup-password"
+                                        type="password"
+                                        placeholder="Create a password"
+                                        required
+                                    />
                                 </div>
                                 <Button type="submit" className="w-full" disabled={isLoading}>
                                     {isLoading ? 'Signing up...' : 'Sign Up'}
