@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { UrlUtils } from "@/lib/utils";
 import { RegisterRequestBody } from "@/types/auth";
 import axios from "axios";
-
+import { handleAxiosError } from '@/lib/errors';
 
 export async function POST(request: Request) {
     try {
@@ -25,14 +25,16 @@ export async function POST(request: Request) {
 
     } catch (error: any) {
         if (axios.isAxiosError(error)) {
-            return NextResponse.json(
-                { error: error.response?.data || "Registration failed" },
+            const apiError = handleAxiosError(error);
+            return NextResponse.json({ error: apiError },
                 { status: error.response?.status || 400 }
             );
         }
-        return NextResponse.json(
-            { error: "Internal Server Error" },
-            { status: 500 }
-        );
+        return NextResponse.json({
+            error: {
+                code: 'INTERNAL_ERROR',
+                message: 'Internal Server Error'
+            }
+        }, { status: 500 });
     }
 }

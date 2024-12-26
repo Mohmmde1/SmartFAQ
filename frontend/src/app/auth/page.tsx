@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { FcGoogle } from 'react-icons/fc'
 import { toast } from "sonner"
 import { SignUpFormData } from '@/types/auth'
+import { AppError } from '@/lib/errors';
 
 export default function AuthPage() {
     const [isLoading, setIsLoading] = useState(false)
@@ -37,7 +38,11 @@ export default function AuthPage() {
             const result = await response.json()
 
             if (!response.ok) {
-                throw new Error(result.error || 'Registration failed')
+                throw new AppError(
+                    result.error.message,
+                    result.error.code,
+                    result.error.details
+                );
             }
 
             toast.success("Registration successful!")
@@ -48,7 +53,17 @@ export default function AuthPage() {
                 callbackUrl: '/'
             })
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Registration failed')
+            if (error instanceof AppError) {
+                toast.error(error.message);
+                // Handle field-specific errors
+                if (error.details) {
+                    Object.entries(error.details).forEach(([field, messages]) => {
+                        toast.error(`${field}: ${messages.join(', ')}`);
+                    });
+                }
+            } else {
+                toast.error('An unexpected error occurred');
+            }
         } finally {
             setIsLoading(false)
         }
