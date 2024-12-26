@@ -10,14 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from 'next/link'
 import { FcGoogle } from 'react-icons/fc'
 import { toast } from "sonner"
-
-interface SignUpFormData {
-    email: string;
-    password1: string;
-    password2: string;
-    first_name?: string;
-    last_name?: string;
-}
+import { SignUpFormData } from '@/types/auth'
 
 export default function AuthPage() {
     const [isLoading, setIsLoading] = useState(false)

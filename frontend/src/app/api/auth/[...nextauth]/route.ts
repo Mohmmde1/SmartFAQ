@@ -4,11 +4,8 @@ import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt"
 import { JwtUtils, UrlUtils } from "@/lib/utils";
+import { RefreshTokenResponse, LoginResponse } from "@/types/auth";
 namespace NextAuthUtils {
-    interface RefreshTokenResponse {
-        access: string;
-        refresh: string;
-    }
 
     export const refreshToken = async function (refreshToken: string): Promise<[string | null, string | null]> {
         try {
@@ -30,16 +27,6 @@ namespace NextAuthUtils {
             return [null, null];
         }
     };
-}
-interface LoginResponse {
-    access: string;
-    refresh: string;
-    user: {
-        pk: number;
-        email: string;
-        first_name: string;
-        last_name: string;
-    }
 }
 
 export const authOptions = {

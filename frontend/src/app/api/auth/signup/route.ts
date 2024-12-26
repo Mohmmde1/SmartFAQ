@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 import { UrlUtils } from "@/lib/utils";
+import { RegisterRequestBody } from "@/types/auth";
 import axios from "axios";
 
-interface RegisterRequestBody {
-    email: string;
-    password1: string;
-    password2: string;
-    first_name?: string;
-    last_name?: string;
-}
 
 export async function POST(request: Request) {
     try {
