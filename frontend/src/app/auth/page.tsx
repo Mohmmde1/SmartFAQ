@@ -86,7 +86,8 @@ export default function AuthPage() {
             })
 
             if (result?.error) {
-                throw new Error(result.error)
+                console.error('Login failed:', result.error)
+                throw new Error('Login failed')
             }
 
             if (result?.ok) {
@@ -94,7 +95,7 @@ export default function AuthPage() {
                 window.location.href = '/'
             }
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Login failed')
+
         } finally {
             setIsLoading(false)
         }

@@ -70,7 +70,7 @@ export const authOptions = {
                     return {
                         id: data.user.pk.toString(),
                         email: data.user.email,
-                        name: data.user.first_name,
+                        name: data.user.first_name + " " + data.user.last_name,
                         accessToken: data.access,
                         refreshToken: data.refresh
                     }
@@ -91,39 +91,49 @@ export const authOptions = {
 
     ],
     callbacks: {
-        async jwt({ token, account }: { token: JWT; account?: any }) {
+        async jwt({ token, account, user }: { token: JWT; account?: any, user?: any }) {
             console.log('JWT Callback Called:', {
+                hasUser: !!user,
                 hasAccount: !!account,
                 hasToken: !!token,
                 tokenExpired: token.accessToken ? JwtUtils.isJwtExpired(token.accessToken as string) : null,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
 
             // Initial sign in
-            if (account && account.provider && account.provider === "google") {
-                try {
-                    const url = UrlUtils.makeUrl(
-                        process.env.BACKEND_API_BASE as string,
-                        "auth",
-                        "google",
-                    );
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            access_token: account.access_token,
-                            id_token: account.id_token,
-                        }),
-                    });
+            if (account) {
+                if (account.provider && account.provider === "google") {
+                    try {
+                        const url = UrlUtils.makeUrl(
+                            process.env.BACKEND_API_BASE as string,
+                            "auth",
+                            "google",
+                        );
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                access_token: account.access_token,
+                                id_token: account.id_token,
+                            }),
+                        });
 
-                    const data = await response.json();
-                    token.accessToken = data.access;
-                    token.refreshToken = data.refresh;
+                        const data = await response.json();
+                        token.accessToken = data.access;
+                        token.refreshToken = data.refresh;
+                        return token;
+                    } catch (error) {
+                        console.error('Error during social auth:', error);
+                    }
+                } else if (
+                    account.provider && account.provider === "credentials"
+                    && user && user.accessToken && user.refreshToken
+                ) {
+                    token.accessToken = user.accessToken;
+                    token.refreshToken = user.refreshToken;
                     return token;
-                } catch (error) {
-                    console.error('Error during social auth:', error);
                 }
             } else if (token) {
                 console.log("Checking token expiration");
@@ -145,10 +155,6 @@ export const authOptions = {
 
             return token;
         },
-        async session({ session, user }: { session: Session; user?: User }) {
-            return session;
-        },
-
     },
 };
 
