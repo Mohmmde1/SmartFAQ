@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { UrlUtils } from "@/lib/utils";
-import { RegisterRequestBody } from "@/types/auth";
+import { RegisterRequestBody } from "@/types/api";
 import axios from "axios";
 import { handleAxiosError } from '@/lib/errors';
 

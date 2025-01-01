@@ -12,6 +12,7 @@ import { FcGoogle } from 'react-icons/fc'
 import { toast } from "sonner"
 import { SignUpFormData } from '@/types/auth'
 import { AppError } from '@/lib/errors';
+import { LoginRequestBody } from '@/types/api'
 
 export default function AuthPage() {
     const [isLoading, setIsLoading] = useState(false)
@@ -73,7 +74,7 @@ export default function AuthPage() {
         setIsLoading(true)
 
         const formData = new FormData(event.currentTarget)
-        const data = {
+        const data: LoginRequestBody = {
             email: formData.get('login-email') as string,
             password: formData.get('login-password') as string,
         }
@@ -86,7 +87,7 @@ export default function AuthPage() {
             })
 
             if (result?.error) {
-                console.error('Login failed:', result.error)
+                console.log('Login failed:', result.error)
                 throw new Error('Login failed')
             }
 
@@ -95,6 +96,8 @@ export default function AuthPage() {
                 window.location.href = '/'
             }
         } catch (error) {
+            console.log('Error logging in:', error)
+            toast.error('Invalid credentials')
 
         } finally {
             setIsLoading(false)

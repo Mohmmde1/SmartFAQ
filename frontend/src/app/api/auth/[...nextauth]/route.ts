@@ -4,7 +4,8 @@ import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt"
 import { JwtUtils, UrlUtils } from "@/lib/utils";
-import { RefreshTokenResponse, LoginResponse } from "@/types/auth";
+import { RefreshTokenResponse, LoginResponse } from "@/types/api";
+import { AppError, handleAxiosError } from "@/lib/errors";
 namespace NextAuthUtils {
 
     export const refreshToken = async function (refreshToken: string): Promise<[string | null, string | null]> {
@@ -47,35 +48,53 @@ export const authOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials: any, req: any) {
-                const url = UrlUtils.makeUrl(
-                    process.env.BACKEND_API_BASE as string,
-                    "auth",
-                    "login",
-                );
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(credentials),
-                });
+                try {
+                    const url = UrlUtils.makeUrl(
+                        process.env.BACKEND_API_BASE as string,
+                        "auth",
+                        "login",
+                    );
+                    const response = await axios.post(url, credentials);
 
-                const data = await response.json() as LoginResponse;
-                console.log('Credentials authorize:', {
-                    credentials,
-                    data,
-                    response,
-                });
-                if (response.ok && data) {
+                    const data: LoginResponse = response.data;
+
                     return {
                         id: data.user.pk.toString(),
                         email: data.user.email,
                         name: data.user.first_name + " " + data.user.last_name,
                         accessToken: data.access,
                         refreshToken: data.refresh
+                    };
+
+                } catch (error) {
+                    if (axios.isAxiosError(error)) {
+                        // Authentication failed
+                        if (error.response?.status === 401) {
+                            return null; // NextAuth will handle redirect
+                        }
+
+                        // Validation errors (400)
+                        if (error.response?.status === 400) {
+                            throw new AppError(
+                                'Invalid credentials',
+                                'INVALID_CREDENTIALS',
+                                error.response.data
+                            );
+                        }
+
+                        // Server errors (500+)
+                        throw new AppError(
+                            'Authentication service unavailable',
+                            'AUTH_SERVICE_ERROR'
+                        );
                     }
+
+                    // Unknown errors
+                    throw new AppError(
+                        'An unexpected error occurred',
+                        'UNKNOWN_ERROR'
+                    );
                 }
-                return null;
             }
         }),
         GoogleProvider({
