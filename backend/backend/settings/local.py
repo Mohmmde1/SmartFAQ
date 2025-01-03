@@ -23,3 +23,8 @@ DATABASES = {'default': dj_database_url.config(default=database_url)}
 
 # Additional local-specific settings
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+###############################################################################
+# Social Authentication Settings
+###############################################################################
+OAUTH_CALLBACK_URL = os.environ.get('OAUTH_CALLBACK_URL', 'http://localhost:3000')

@@ -23,3 +23,8 @@ DATABASES = {'default': dj_database_url.config(default=database_url)}
 # Additional docker-specific settings
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 STATIC_ROOT = '/app/static'
+
+###############################################################################
+# Social Authentication Settings
+###############################################################################
+OAUTH_CALLBACK_URL = os.environ.get('OAUTH_CALLBACK_URL', 'http://localhost')

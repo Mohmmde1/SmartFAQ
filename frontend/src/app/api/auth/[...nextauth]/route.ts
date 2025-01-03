@@ -111,68 +111,69 @@ export const authOptions = {
     ],
     callbacks: {
         async jwt({ token, account, user }: { token: JWT; account?: any, user?: any }) {
-            console.log('JWT Callback Called:', {
-                hasUser: !!user,
-                hasAccount: !!account,
-                hasToken: !!token,
-                tokenExpired: token.accessToken ? JwtUtils.isJwtExpired(token.accessToken as string) : null,
-                timestamp: new Date().toISOString(),
-            });
+            try {
+                console.log('JWT Callback Called:', {
+                    hasUser: !!user,
+                    hasAccount: !!account,
+                    hasToken: !!token,
+                    tokenExpired: token.accessToken ?
+                        JwtUtils.isJwtExpired(token.accessToken as string) : null,
+                    timestamp: new Date().toISOString(),
+                });
 
-            // Initial sign in
-            if (account) {
-                if (account.provider && account.provider === "google") {
-                    try {
-                        const url = UrlUtils.makeUrl(
-                            process.env.BACKEND_API_BASE as string,
-                            "auth",
-                            "google",
-                        );
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                access_token: account.access_token,
-                                id_token: account.id_token,
-                            }),
-                        });
+                // Initial sign in with Google
+                if (account?.provider === "google") {
+                    const url = UrlUtils.makeUrl(
+                        process.env.BACKEND_API_BASE as string,
+                        "auth",
+                        "google",
+                    );
+                    console.log("URL:", url);
+                    const response = await axios.post(url, {
+                        access_token: account.access_token,
+                        id_token: account.id_token,
+                    });
 
-                        const data = await response.json();
-                        token.accessToken = data.access;
-                        token.refreshToken = data.refresh;
-                        return token;
-                    } catch (error) {
-                        console.error('Error during social auth:', error);
-                    }
-                } else if (
-                    account.provider && account.provider === "credentials"
-                    && user && user.accessToken && user.refreshToken
-                ) {
+                    token.accessToken = response.data.access;
+                    token.refreshToken = response.data.refresh;
+                    return token;
+                }
+
+                // Initial sign in with credentials
+                if (account?.provider === "credentials" && user) {
                     token.accessToken = user.accessToken;
                     token.refreshToken = user.refreshToken;
                     return token;
                 }
-            } else if (token) {
-                console.log("Checking token expiration");
+
+                // Token refresh check
                 if (token.accessToken && JwtUtils.isJwtExpired(token.accessToken as string)) {
-                    console.log("Token expired, refreshing token");
-                    if (token.refreshToken) {
-                        const [accessToken, refreshToken] = await NextAuthUtils.refreshToken(token.refreshToken as string);
-                        if (accessToken && refreshToken) {
-                            token.accessToken = accessToken;
-                            token.refreshToken = refreshToken;
-                        }
+                    if (!token.refreshToken) {
+                        delete token.accessToken;
+                        delete token.refreshToken;
+                        return token;
+                    }
+
+                    const [newAccess, newRefresh] = await NextAuthUtils.refreshToken(
+                        token.refreshToken as string
+                    );
+
+                    if (newAccess && newRefresh) {
+                        token.accessToken = newAccess;
+                        token.refreshToken = newRefresh;
                     } else {
                         delete token.accessToken;
                         delete token.refreshToken;
-                        console.log("No refresh token found");
                     }
                 }
-            }
 
-            return token;
+                return token;
+            } catch (error) {
+                console.error('JWT callback error:', error);
+                delete token.accessToken;
+                delete token.refreshToken;
+                return token;
+            }
         },
     },
 };
