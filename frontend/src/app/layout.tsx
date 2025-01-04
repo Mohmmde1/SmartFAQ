@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import LayoutWrapper from '@/components/layout-wrapper'
-import SessionProviderWrapper from '@/components/session-provider-wrapper'
+import { ThemeProvider } from '@/components/theme-provider'
 import '@/app/globals.css'
+import { Session } from 'inspector/promises'
+import SessionProviderWrapper from '@/components/session-provider-wrapper'
 import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -18,12 +20,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <SessionProviderWrapper>
-          <LayoutWrapper>{children}</LayoutWrapper>
-        </SessionProviderWrapper>
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <SessionProviderWrapper>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </SessionProviderWrapper>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
