@@ -1,4 +1,4 @@
-FROM node:18-alpine AS frontend-build
+FROM node:22-alpine AS frontend-build
 
 # Create a non-root user for the container
 ARG USER=mohammed

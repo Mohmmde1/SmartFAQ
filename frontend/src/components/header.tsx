@@ -1,11 +1,14 @@
 'use client'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
 
 export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const { data: session } = useSession()
 
     return (
         <header className="py-4 px-4 md:px-6 lg:px-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b border-border/40">
@@ -23,9 +26,16 @@ export default function Header() {
                     <Link href="#pricing" className="text-sm font-medium hover:text-primary">
                         Pricing
                     </Link>
-                    <Button asChild>
-                        <Link href="/auth">Get started</Link>
-                    </Button>
+                    {session ? (
+                        <>
+                            <span className="text-sm font-medium">Welcome, {session.user?.email}</span>
+                            <Button onClick={() => signOut()} variant="ghost">Sign Out</Button>
+                        </>
+                    ) : (
+                        <Button asChild>
+                            <Link href="/auth">Sign In</Link>
+                        </Button>
+                    )}
                 </nav>
                 <div className="md:hidden">
                     <button
@@ -51,9 +61,16 @@ export default function Header() {
                                 <Link href="#pricing" className="text-sm font-medium hover:text-primary">
                                     Pricing
                                 </Link>
-                                <Button asChild className="w-full">
-                                    <Link href="/auth">Get started</Link>
-                                </Button>
+                                {session ? (
+                                    <>
+                                        <span className="text-sm font-medium">Welcome, {session.user?.name}</span>
+                                        <Button onClick={() => signOut()} variant="ghost" className="w-full">Sign Out</Button>
+                                    </>
+                                ) : (
+                                    <Button asChild className="w-full">
+                                        <Link href="/auth">Sign In</Link>
+                                    </Button>
+                                )}
                             </div>
                         </nav>
                     )}
