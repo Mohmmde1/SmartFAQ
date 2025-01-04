@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
+import { ThemeToggle } from './theme-toggle'
 
 export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -36,8 +37,10 @@ export default function Header() {
                             <Link href="/auth">Sign In</Link>
                         </Button>
                     )}
+                    <ThemeToggle />
                 </nav>
-                <div className="md:hidden">
+                <div className="md:hidden flex items-center space-x-4">
+                    <ThemeToggle />
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         aria-expanded={isMobileMenuOpen}
@@ -50,7 +53,7 @@ export default function Header() {
                         )}
                     </button>
                     {isMobileMenuOpen && (
-                        <nav className="absolute top-full left-0 right-0 bg-background border-b border-border/40 py-4">
+                        <nav className="absolute top-full left-0 right-0 bg-background border-b border-border/40 py-4 md:hidden">
                             <div className="flex flex-col space-y-4 items-center">
                                 <Link href="#how-it-works" className="text-sm font-medium hover:text-primary">
                                     How It Works
