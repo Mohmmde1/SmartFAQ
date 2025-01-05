@@ -18,24 +18,27 @@ export default function Header() {
                     <span className="text-2xl font-bold text-primary">SmartFAQ</span>
                 </Link>
                 <nav className="hidden md:flex space-x-4 items-center">
-                    <Link href="#how-it-works" className="text-sm font-medium hover:text-primary">
-                        How It Works
-                    </Link>
-                    <Link href="#features" className="text-sm font-medium hover:text-primary">
-                        Features
-                    </Link>
-                    <Link href="#pricing" className="text-sm font-medium hover:text-primary">
-                        Pricing
-                    </Link>
                     {session ? (
                         <>
+
                             <span className="text-sm font-medium">Welcome, {session.user?.email}</span>
                             <Button onClick={() => signOut()} variant="ghost">Sign Out</Button>
                         </>
                     ) : (
-                        <Button asChild>
-                            <Link href="/auth">Sign In</Link>
-                        </Button>
+                        <>
+                            <Link href="#how-it-works" className="text-sm font-medium hover:text-primary">
+                                How It Works
+                            </Link>
+                            <Link href="#features" className="text-sm font-medium hover:text-primary">
+                                Features
+                            </Link>
+                            <Link href="#pricing" className="text-sm font-medium hover:text-primary">
+                                Pricing
+                            </Link>
+                            <Button asChild>
+                                <Link href="/auth">Sign In</Link>
+                            </Button>
+                        </>
                     )}
                     <ThemeToggle />
                 </nav>
