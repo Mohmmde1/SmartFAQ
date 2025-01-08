@@ -10,14 +10,24 @@ from .serializers import FAQSerializer
 class FAQViewSet(ModelViewSet):
     queryset = FAQ.objects.all()
     serializer_class = FAQSerializer
+    permission_classes = [IsAuthenticated]
+
+    def _generate_title(self, content: str) -> str:
+        return content[:50] + '...' if len(content) > 50 else content
 
     def perform_create(self, serializer):
         """
         Overwrite the default create method to include FAQ generation.
         """
         text = serializer.validated_data['content']
-        generated_faqs = generate_faq(text)  # Generate FAQs from the provided text
-        serializer.save(user=self.request.user, generated_faqs=generated_faqs)
+        no_of_faqs = serializer.validated_data.get('number_of_faqs', 3)
+        title = self._generate_title(text)
+        generated_faqs = generate_faq(text, no_of_faqs)  # Generate FAQs from the provided text
+        serializer.save(
+            user=self.request.user,
+            title=title,
+            generated_faqs=generated_faqs
+        )
 
     def get_queryset(self):
         """

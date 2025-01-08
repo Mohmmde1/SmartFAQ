@@ -1,9 +1,22 @@
 # faq/faq_generator.py
-def generate_faq(text):
-    # Placeholder for AI-based FAQ generation logic
-    # Replace this with an API call or custom logic
-    example_faqs = [
-        {"question": "What is this about?", "answer": "This is about SmartFAQ."},
-        {"question": "How do I use it?", "answer": "You upload text and get FAQs."}
+from .models import QuestionAnswer
+
+
+def generate_faq(text: str, no_of_faqs: int) -> list[QuestionAnswer]:
+    """Generate dummy FAQs aligned with QuestionAnswer model"""
+    dummy_faqs = [
+        QuestionAnswer.objects.create(
+            question="What is this text about?",
+            answer="This text is about implementing FAQ generation."
+        ),
+        QuestionAnswer.objects.create(
+            question="How long is the text?",
+            answer=f"The text is {len(text)} characters long."
+        ),
+        QuestionAnswer.objects.create(
+            question="What is the main topic?",
+            answer="The main topic appears to be FAQ generation and management."
+        )
     ]
-    return example_faqs
+
+    return dummy_faqs
