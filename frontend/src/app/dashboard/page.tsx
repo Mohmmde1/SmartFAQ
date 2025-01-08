@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,43 +17,54 @@ import Link from 'next/link'
 
 import { toast } from 'sonner'
 import { AppError } from '@/lib/errors'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
-// Mock data for recent FAQs
-const recentFaqs = [
-    {
-        id: 1,
-        title: "Company Policy FAQ",
-        preview: [
-            "Q: What is our work from home policy?",
-            "Q: How many vacation days do employees get?",
-            "Q: What are the core working hours?"
-        ]
-    },
-    {
-        id: 2,
-        title: "Product Features FAQ",
-        preview: [
-            "Q: What platforms does the product support?",
-            "Q: Is there a free trial available?",
-            "Q: How often are updates released?"
-        ]
-    },
-    {
-        id: 3,
-        title: "Customer Support FAQ",
-        preview: [
-            "Q: How do I reset my password?",
-            "Q: What payment methods do you accept?",
-            "Q: How long does shipping usually take?"
-        ]
-    }
-]
+interface FAQ {
+    id: number;
+    title: string;
+    content: string;
+    generated_faqs: Array<{
+        question: string;
+        answer: string;
+    }>;
+}
 
 export default function Dashboard() {
     const [inputText, setInputText] = useState('')
     const [numQuestions, setNumQuestions] = useState(5)
     const [tone, setTone] = useState("neutral")
     const [isLoading, setIsLoading] = useState(false)
+    const [faqs, setFaqs] = useState<FAQ[]>([])
+    const [isFetchingFaqs, setIsFetchingFaqs] = useState(true)
+
+    useEffect(() => {
+        const fetchFAQs = async () => {
+            try {
+                const response = await fetch("/api/faq");
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new AppError(
+                        result.error.message,
+                        result.error.code,
+                        result.error.details
+                    );
+                }
+                console.log('FAQs:', result)
+                setFaqs(result);
+            } catch (error) {
+                if (error instanceof AppError) {
+                    toast.error(error.message);
+                } else {
+                    toast.error('Failed to fetch FAQs');
+                }
+            } finally {
+                setIsFetchingFaqs(false);
+            }
+        };
+
+        fetchFAQs();
+    }, []);
 
     const handleGenerateFAQs = async () => {
         // Handle FAQ generation logic here
@@ -103,8 +114,9 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
-            <div className="grid gap-8 md:grid-cols-2">
-                <Card>
+            <div className="grid gap-8 lg:grid-cols-2">
+                {/* First Card - FAQ Generator */}
+                <Card className="w-full">
                     <CardHeader>
                         <CardTitle>Generate FAQs</CardTitle>
                     </CardHeader>
@@ -154,28 +166,39 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
+                {/* Second Card - Recent FAQs */}
+                <Card className="w-full h-[600px] flex flex-col">
+                    <CardHeader className="border-b">
                         <CardTitle>Recent FAQs</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-6">
-                            {recentFaqs.map((faq) => (
-                                <div key={faq.id} className="space-y-2">
-                                    <h3 className="text-lg font-semibold">{faq.title}</h3>
-                                    <ul className="list-disc pl-5 space-y-1">
-                                        {faq.preview.map((question, index) => (
-                                            <li key={index} className="text-sm text-muted-foreground">
-                                                {question}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <Button variant="outline" size="sm" asChild>
-                                        <Link href={`/dashboard/faq/${faq.id}`}>View Full FAQ</Link>
-                                    </Button>
+                    <CardContent className="flex-1 p-0">
+                        {isFetchingFaqs ? (
+                            <div className="p-4">Loading FAQs...</div>
+                        ) : (
+                            <ScrollArea className="h-[500px]">
+                                <div className="divide-y">
+                                    {faqs.map((faq) => (
+                                        <div key={faq.id} className="p-4 hover:bg-muted/50">
+                                            <div className="max-w-[calc(100%-2rem)] space-y-2">
+                                                <h3 className="text-lg font-semibold truncate">{faq.title}</h3>
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    {faq.generated_faqs.slice(0, 3).map((qa, index) => (
+                                                        <li key={index} className="text-sm text-muted-foreground line-clamp-1">
+                                                            {qa.question}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                                <Button variant="outline" size="sm" className="mt-2">
+                                                    <Link href={`/dashboard/faq/${faq.id}`} className="w-full">
+                                                        View Full FAQ
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </ScrollArea>
+                        )}
                     </CardContent>
                 </Card>
             </div>
