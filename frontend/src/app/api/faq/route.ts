@@ -1,22 +1,27 @@
-import { NextResponse } from "next/server";
-import { UrlUtils } from "@/lib/utils";
-import { RegisterRequestBody } from "@/types/api";
+import { NextRequest, NextResponse } from "next/server";
+import { JwtUtils, UrlUtils } from "@/lib/utils";
 import axios from "axios";
 import { handleAxiosError } from '@/lib/errors';
+import { getToken } from "next-auth/jwt";
 
-export async function POST(request: Request) {
+interface FAQRequestBody {
+    content: string;
+    no_of_faqs: number;
+}
+export async function POST(request: NextRequest) {
     try {
-        const body: RegisterRequestBody = await request.json();
+        const access_token = await JwtUtils.getAccessToken(request);
+        const body: FAQRequestBody = await request.json();
 
         const url = UrlUtils.makeUrl(
             process.env.NEXT_PUBLIC_BACKEND_API_BASE || "",
-            "auth",
-            "registration"
+            "faq",
         );
-
+        console.log("URL", url);
         const response = await axios.post(url, body, {
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${access_token}`,
             },
         });
 

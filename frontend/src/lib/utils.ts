@@ -1,12 +1,27 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import jwt from "jsonwebtoken";
+import { getToken } from "next-auth/jwt";
+import { NextRequest } from "next/server";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 export namespace JwtUtils {
+  export const getAccessToken = async (request: NextRequest) => {
+    const token = await getToken({
+      req: request,
+      secret: process.env.JWT_SECRET,
+      cookieName: 'next-auth.session-token',
+    });
+
+    if (!token) {
+      throw new Error('No token found');
+    }
+    const { accessToken } = token;
+    return accessToken;
+  }
   export const isJwtExpired = (token: string) => {
     // offset by 60 seconds, so we will check if the token is "almost expired".
     const currentTime: number = Math.round(Date.now() / 1000 + 60);

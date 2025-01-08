@@ -12,7 +12,7 @@ namespace NextAuthUtils {
         try {
             const response = await axios.post<RefreshTokenResponse>(
                 UrlUtils.makeUrl(
-                    process.env.BACKEND_API_BASE || '',
+                    process.env.NEXT_PUBLIC_BACKEND_API_BASE || '',
                     "auth",
                     "token",
                     "refresh",
@@ -50,7 +50,7 @@ export const authOptions = {
             async authorize(credentials: any, req: any) {
                 try {
                     const url = UrlUtils.makeUrl(
-                        process.env.BACKEND_API_BASE as string,
+                        process.env.NEXT_PUBLIC_BACKEND_API_BASE as string,
                         "auth",
                         "login",
                     );
@@ -124,7 +124,7 @@ export const authOptions = {
                 // Initial sign in with Google
                 if (account?.provider === "google") {
                     const url = UrlUtils.makeUrl(
-                        process.env.BACKEND_API_BASE as string,
+                        process.env.NEXT_PUBLIC_BACKEND_API_BASE as string,
                         "auth",
                         "google",
                     );

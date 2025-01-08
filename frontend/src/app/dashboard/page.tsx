@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import {
@@ -15,6 +14,9 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import Link from 'next/link'
+
+import { toast } from 'sonner'
+import { AppError } from '@/lib/errors'
 
 // Mock data for recent FAQs
 const recentFaqs = [
@@ -51,15 +53,50 @@ export default function Dashboard() {
     const [inputText, setInputText] = useState('')
     const [numQuestions, setNumQuestions] = useState(5)
     const [tone, setTone] = useState("neutral")
+    const [isLoading, setIsLoading] = useState(false)
 
-    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        // Handle file upload logic here
-        console.log('File uploaded:', event.target.files?.[0]?.name)
-    }
-
-    const handleGenerateFAQs = () => {
+    const handleGenerateFAQs = async () => {
         // Handle FAQ generation logic here
         console.log('Generating FAQs for:', { inputText, numQuestions, tone })
+        setIsLoading(true);
+        try {
+            const data = {
+                content: inputText,
+                no_of_faqs: numQuestions,
+            }
+            const response = await fetch("api/faq", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            },)
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new AppError(
+                    result.error.message,
+                    result.error.code,
+                    result.error.details
+                );
+            }
+            toast.success("FAQs generated successfully!");
+
+        } catch (error: unknown) {
+            if (error instanceof AppError) {
+                toast.error(error.message);
+                // Handle field-specific errors
+                if (error.details) {
+                    Object.entries(error.details).forEach(([field, messages]) => {
+                        toast.error(`${field}: ${messages.join(', ')}`);
+                    });
+                }
+            } else {
+                toast.error('An unexpected error occurred');
+            }
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
@@ -109,8 +146,9 @@ export default function Dashboard() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <Button onClick={handleGenerateFAQs} className="w-full">
-                                Generate FAQs
+
+                            <Button onClick={handleGenerateFAQs} disabled={isLoading} className="w-full">
+                                {isLoading ? 'Generating FAQs' : 'Generate FAQs'}
                             </Button>
                         </div>
                     </CardContent>
