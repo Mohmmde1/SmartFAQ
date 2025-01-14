@@ -37,3 +37,20 @@ export interface RegisterRequestBody {
     first_name?: string;
     last_name?: string;
 }
+
+export interface QuestionAnswer {
+    id: number;
+    question: string;
+    answer: string;
+}
+
+export interface FAQ {
+    id: number;
+    user: number;
+    title: string;
+    content: string;
+    generated_faqs: QuestionAnswer[];
+    number_of_faqs: number;
+    created_at: string;
+    updated_at: string;
+}

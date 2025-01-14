@@ -18,16 +18,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { AppError } from '@/lib/errors'
 import { ScrollArea } from '@/components/ui/scroll-area'
-
-interface FAQ {
-    id: number;
-    title: string;
-    content: string;
-    generated_faqs: Array<{
-        question: string;
-        answer: string;
-    }>;
-}
+import { FAQ } from '@/types/api'
 
 export default function Dashboard() {
     const [inputText, setInputText] = useState('')
@@ -67,8 +58,6 @@ export default function Dashboard() {
     }, []);
 
     const handleGenerateFAQs = async () => {
-        // Handle FAQ generation logic here
-        console.log('Generating FAQs for:', { inputText, numQuestions, tone })
         setIsLoading(true);
         try {
             const data = {
@@ -81,7 +70,7 @@ export default function Dashboard() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data),
-            },)
+            })
             const result = await response.json()
 
             if (!response.ok) {
@@ -91,9 +80,28 @@ export default function Dashboard() {
                     result.error.details
                 );
             }
-            toast.success("FAQs generated successfully!");
 
+            // Fetch updated FAQs
+            const updatedResponse = await fetch("/api/faq");
+            const updatedResult = await updatedResponse.json();
+
+            if (!updatedResponse.ok) {
+                throw new AppError(
+                    updatedResult.error.message,
+                    updatedResult.error.code,
+                    updatedResult.error.details
+                );
+            }
+
+            // Update state
+            setFaqs(updatedResult);
+            setInputText(''); // Clear input
+            setNumQuestions(5); // Reset to default
+            setTone('neutral'); // Reset tone
+
+            toast.success("FAQs generated successfully!");
         } catch (error: unknown) {
+            // ...existing error handling...
             if (error instanceof AppError) {
                 toast.error(error.message);
                 // Handle field-specific errors
