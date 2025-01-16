@@ -1,104 +1,116 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-
-// Mock data for FAQ
-const mockFaq = {
-    id: 1,
-    title: "Company Policy FAQ",
-    content: `Our work from home policy allows employees to work remotely up to 2 days per week, subject to manager approval. Employees receive 20 vacation days per year, which increase with tenure. Core working hours are from 10 AM to 4 PM, with flexible start and end times.`,
-}
+import { AppError } from '@/lib/errors'
+import { FAQ } from '@/types/api'
+import { toast } from "sonner"
+import { LoadingSkeleton } from '@/components/faq/loading-skeleton'
+import { FAQInput } from '@/components/faq/faq-input'
+import { FAQOptions } from '@/components/faq/faq-options'
+import { GeneratedFAQs } from '@/components/faq/generated-faqs'
 
 export default function FAQGenerationPage() {
     const params = useParams()
     const { id } = params
-    const [faqContent, setFaqContent] = useState(mockFaq.content)
+    const [faq, setFaq] = useState<FAQ | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [faqContent, setFaqContent] = useState('')
     const [numQuestions, setNumQuestions] = useState(5)
     const [tone, setTone] = useState("neutral")
 
-    const handleGenerateFAQs = () => {
-        // Here you would implement the actual FAQ generation logic
-        console.log('Generating FAQs with:', { faqContent, numQuestions, tone })
+    useEffect(() => {
+        const fetchFaq = async () => {
+            try {
+                const response = await fetch(`/api/faq/${id}`)
+                const data = await response.json()
+
+                if (!response.ok) {
+                    throw new AppError(
+                        data.error.message,
+                        data.error.code,
+                        data.error.details
+                    )
+                }
+                setFaq(data)
+                setFaqContent(data.content)
+            } catch (error) {
+                if (error instanceof AppError) {
+                    toast.error(error.message)
+                } else {
+                    toast.error('Failed to fetch FAQ')
+                }
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchFaq()
+    }, [id])
+
+    const handleGenerateFAQs = async () => {
+        setIsLoading(true)
+        try {
+            const response = await fetch(`/api/faq/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content: faqContent,
+                    no_of_faqs: numQuestions,
+                    tone,
+                }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new AppError(
+                    data.error.message,
+                    data.error.code,
+                    data.error.details
+                )
+            }
+
+            setFaq(data)
+            toast.success('FAQs generated successfully!')
+        } catch (error) {
+            if (error instanceof AppError) {
+                toast.error(error.message)
+            } else {
+                toast.error('Failed to generate FAQs')
+            }
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    if (isLoading) {
+        return <LoadingSkeleton />
     }
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">FAQ Generation: {mockFaq.title}</h1>
+            <h1 className="text-3xl font-bold mb-8">FAQ Generation: {faq?.title}</h1>
 
             <div className="grid gap-8 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Input Text</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Textarea
-                            value={faqContent}
-                            onChange={(e) => setFaqContent(e.target.value)}
-                            className="min-h-[200px]"
-                        />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Customization Options</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="num-questions">Number of Questions</Label>
-                            <Slider
-                                id="num-questions"
-                                min={1}
-                                max={20}
-                                step={1}
-                                value={[numQuestions]}
-                                onValueChange={(value) => setNumQuestions(value[0])}
-                            />
-                            <div className="text-sm text-muted-foreground">{numQuestions} questions</div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="tone">Tone</Label>
-                            <Select value={tone} onValueChange={setTone}>
-                                <SelectTrigger id="tone">
-                                    <SelectValue placeholder="Select tone" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="formal">Formal</SelectItem>
-                                    <SelectItem value="casual">Casual</SelectItem>
-                                    <SelectItem value="neutral">Neutral</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Button onClick={handleGenerateFAQs} className="w-full">
-                            Generate FAQs
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                <Card className="md:col-span-2">
-                    <CardHeader>
-                        <CardTitle>Generated FAQs</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            <p className="text-muted-foreground">Your generated FAQs will appear here.</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                <FAQInput
+                    content={faqContent}
+                    onChange={setFaqContent}
+                />
+                <FAQOptions
+                    numQuestions={numQuestions}
+                    tone={tone}
+                    onQuestionsChange={setNumQuestions}
+                    onToneChange={setTone}
+                    onGenerate={handleGenerateFAQs}
+                />
+                {faq && (
+                    <GeneratedFAQs
+                        faqs={faq.generated_faqs}
+                    />
+                )}
             </div>
         </div>
     )
