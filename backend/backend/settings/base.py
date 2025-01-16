@@ -37,6 +37,7 @@ DJANGO_APPS = [
 # Custom project apps
 CUSTOM_APPS = [
     'auths',
+    'faq',
 ]
 
 # Third-party apps

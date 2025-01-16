@@ -9,7 +9,7 @@ export async function POST(request: Request) {
         const body: RegisterRequestBody = await request.json();
 
         const url = UrlUtils.makeUrl(
-            process.env.BACKEND_API_BASE || "",
+            process.env.NEXT_PUBLIC_BACKEND_API_BASE || "",
             "auth",
             "registration"
         );

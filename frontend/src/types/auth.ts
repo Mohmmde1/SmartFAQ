@@ -1,4 +1,4 @@
-export interface AuthUser {
+export type AuthUser = {
     id: string;
     email: string;
     name?: string;
@@ -6,7 +6,7 @@ export interface AuthUser {
     refreshToken: string;
 }
 
-export interface SignUpFormData {
+export type SignUpFormData = {
     email: string;
     password1: string;
     password2: string;
