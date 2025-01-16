@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Textarea } from "../ui/textarea";
 
-interface FAQInputProps {
+type FAQInputProps = {
     content: string;
     onChange: (value: string) => void;
 }

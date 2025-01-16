@@ -1,10 +1,7 @@
+import { QuestionAnswer } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-interface GeneratedFAQsProps {
-    faqs: Array<{ id: number; question: string; answer: string; }>;
-}
-
-export function GeneratedFAQs({ faqs }: GeneratedFAQsProps) {
+export function GeneratedFAQs({ faqs }: { faqs: QuestionAnswer[] }) {
     return (
         <Card className="md:col-span-2">
             <CardHeader>

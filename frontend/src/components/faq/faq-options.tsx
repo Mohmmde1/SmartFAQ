@@ -4,7 +4,7 @@ import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Slider } from "../ui/slider";
 
-interface FAQOptionsProps {
+type FAQOptionsProps = {
     numQuestions: number;
     tone: string;
     onQuestionsChange: (value: number) => void;

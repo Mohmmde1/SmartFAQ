@@ -1,25 +1,25 @@
-export interface ApiError {
+export type ApiError = {
     code: string;
     message: string;
     details?: Record<string, string[]>;
 }
 
-export interface ApiResponse<T> {
+export type ApiResponse<T> = {
     data?: T;
     error?: ApiError;
 }
 
-export interface LoginRequestBody {
+export type LoginRequestBody = {
     email: string;
     password: string;
 }
 
-export interface RefreshTokenResponse {
+export type RefreshTokenResponse = {
     access: string;
     refresh: string;
 }
 
-export interface LoginResponse {
+export type LoginResponse = {
     access: string;
     refresh: string;
     user: {
@@ -30,7 +30,7 @@ export interface LoginResponse {
     }
 }
 
-export interface RegisterRequestBody {
+export type RegisterRequestBody = {
     email: string;
     password1: string;
     password2: string;
@@ -38,13 +38,13 @@ export interface RegisterRequestBody {
     last_name?: string;
 }
 
-export interface QuestionAnswer {
+export type QuestionAnswer = {
     id: number;
     question: string;
     answer: string;
 }
 
-export interface FAQ {
+export type FAQ = {
     id: number;
     user: number;
     title: string;

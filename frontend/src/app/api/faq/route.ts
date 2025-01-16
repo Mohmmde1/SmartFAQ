@@ -4,12 +4,12 @@ import axios from "axios";
 import { handleAxiosError } from '@/lib/errors';
 import { getToken } from "next-auth/jwt";
 
-interface FAQRequestBody {
+type FAQRequestBody = {
     content: string;
     no_of_faqs: number;
 }
 
-interface FAQListResponse {
+type FAQListResponse = {
     count: number;
     next?: string;
     previous?: string;
