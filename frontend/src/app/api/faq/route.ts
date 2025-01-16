@@ -2,20 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { JwtUtils, UrlUtils } from "@/lib/utils";
 import axios from "axios";
 import { handleAxiosError } from '@/lib/errors';
-import { getToken } from "next-auth/jwt";
+import { FAQRequestBody, FAQListResponse } from "@/types/api";
 
-type FAQRequestBody = {
-    content: string;
-    no_of_faqs: number;
-}
-
-type FAQListResponse = {
-    count: number;
-    next?: string;
-    previous?: string;
-    results: [];
-
-}
 export async function POST(request: NextRequest) {
     try {
         const access_token = await JwtUtils.getAccessToken(request);

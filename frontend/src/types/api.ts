@@ -54,3 +54,15 @@ export type FAQ = {
     created_at: string;
     updated_at: string;
 }
+
+export type FAQRequestBody = {
+    content: string;
+    no_of_faqs: number;
+}
+
+export type FAQListResponse = {
+    count: number;
+    next?: string;
+    previous?: string;
+    results: [];
+}
