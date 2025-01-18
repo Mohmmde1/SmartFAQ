@@ -2,9 +2,9 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from .faq_generator import generate_faq
 from .models import FAQ
 from .serializers import FAQSerializer
+from .services import generate_faq
 
 
 class FAQViewSet(ModelViewSet):
@@ -19,10 +19,11 @@ class FAQViewSet(ModelViewSet):
         """
         Overwrite the default create method to include FAQ generation.
         """
+        print(serializer.validated_data)
         text = serializer.validated_data['content']
-        no_of_faqs = serializer.validated_data.get('number_of_faqs', 3)
+        number_of_faqs = serializer.validated_data.get('number_of_faqs', 3)
         title = self._generate_title(text)
-        generated_faqs = generate_faq(text, no_of_faqs)  # Generate FAQs from the provided text
+        generated_faqs = generate_faq(text, number_of_faqs)
         serializer.save(
             user=self.request.user,
             title=title,

@@ -62,8 +62,9 @@ export default function Dashboard() {
         try {
             const data = {
                 content: inputText,
-                no_of_faqs: numQuestions,
+                number_of_faqs: numQuestions,
             }
+            console.log(data)
             const response = await fetch("api/faq", {
                 method: 'POST',
                 headers: {

@@ -58,7 +58,7 @@ export default function FAQGenerationPage() {
                 },
                 body: JSON.stringify({
                     content: faqContent,
-                    no_of_faqs: numQuestions,
+                    number_of_faqs: numQuestions,
                     tone,
                 }),
             })

@@ -57,7 +57,7 @@ export type FAQ = {
 
 export type FAQRequestBody = {
     content: string;
-    no_of_faqs: number;
+    number_of_faqs: number;
 }
 
 export type FAQListResponse = {
