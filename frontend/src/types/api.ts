@@ -68,5 +68,5 @@ export type FAQListResponse = {
     count: number;
     next?: string;
     previous?: string;
-    results: [];
+    results: FAQ[] | null;
 }
