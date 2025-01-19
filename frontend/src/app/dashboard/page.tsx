@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import { AppError } from '@/lib/errors'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FAQ } from '@/types/api'
+import { useInView } from 'react-intersection-observer'
 
 export default function Dashboard() {
     const [inputText, setInputText] = useState('')
@@ -27,35 +28,49 @@ export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(false)
     const [faqs, setFaqs] = useState<FAQ[]>([])
     const [isFetchingFaqs, setIsFetchingFaqs] = useState(true)
+    const [page, setPage] = useState(1)
+    const [hasMore, setHasMore] = useState(true)
+    const { ref, inView } = useInView()
+
+    const fetchFAQs = async (pageNumber: number) => {
+        try {
+            const response = await fetch(`/api/faq?page=${pageNumber}`);
+            const result = await response.json();
+
+            if (!response.ok) {
+                if (result.error.code === 'INVALID_PAGE') {
+                    setHasMore(false);
+                    return;
+                }
+                throw new AppError(
+                    result.error.message,
+                    result.error.code,
+                    result.error.details
+                );
+            }
+
+            setFaqs(prev => pageNumber === 1 ? result : [...prev, ...result]);
+            setPage(pageNumber);
+        } catch (error) {
+            if (error instanceof AppError) {
+                toast.error(error.message);
+            } else {
+                toast.error('Failed to fetch FAQs');
+            }
+        } finally {
+            setIsFetchingFaqs(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchFAQs = async () => {
-            try {
-                const response = await fetch("/api/faq");
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new AppError(
-                        result.error.message,
-                        result.error.code,
-                        result.error.details
-                    );
-                }
-                console.log('FAQs:', result)
-                setFaqs(result);
-            } catch (error) {
-                if (error instanceof AppError) {
-                    toast.error(error.message);
-                } else {
-                    toast.error('Failed to fetch FAQs');
-                }
-            } finally {
-                setIsFetchingFaqs(false);
-            }
-        };
-
-        fetchFAQs();
+        fetchFAQs(1);
     }, []);
+
+    useEffect(() => {
+        if (inView && hasMore && !isFetchingFaqs) {
+            fetchFAQs(page + 1);
+        }
+    }, [inView, hasMore, isFetchingFaqs]);
 
     const handleGenerateFAQs = async () => {
         setIsLoading(true);
@@ -102,7 +117,6 @@ export default function Dashboard() {
 
             toast.success("FAQs generated successfully!");
         } catch (error: unknown) {
-            // ...existing error handling...
             if (error instanceof AppError) {
                 toast.error(error.message);
                 // Handle field-specific errors
@@ -205,6 +219,11 @@ export default function Dashboard() {
                                             </div>
                                         </div>
                                     ))}
+                                    {hasMore && (
+                                        <div ref={ref} className="py-4 text-center">
+                                            {isFetchingFaqs ? 'Loading more...' : 'Scroll for more'}
+                                        </div>
+                                    )}
                                 </div>
                             </ScrollArea>
                         )}

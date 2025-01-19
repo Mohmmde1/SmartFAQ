@@ -1,7 +1,11 @@
-export type ApiError = {
+export interface PaginationError {
+    detail: string;
+}
+
+export interface ApiError {
     code: string;
     message: string;
-    details?: Record<string, string[]>;
+    details?: Record<string, string[]> | PaginationError;
 }
 
 export type ApiResponse<T> = {

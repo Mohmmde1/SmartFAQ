@@ -43,24 +43,33 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
     try {
         const access_token = await JwtUtils.getAccessToken(request);
+        const { searchParams } = new URL(request.url);
+        const page = searchParams.get('page') || '1';
 
         const url = UrlUtils.makeUrl(
             process.env.NEXT_PUBLIC_BACKEND_API_BASE || "",
             "faq",
         );
-        console.log("URL", url);
-        const response = await axios.get(url, {
+
+        const response = await axios.get(`${url}?page=${page}`, {
             headers: {
-                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${access_token}`,
             },
         });
-        const data: FAQListResponse = response.data;
-        console.log("FAQs:", data.results);
-        return NextResponse.json(data.results, { status: 200 });
 
+        const data: FAQListResponse = response.data;
+        return NextResponse.json(data.results, { status: 200 });
     } catch (error: any) {
         if (axios.isAxiosError(error)) {
+            if (error.response?.data?.detail === 'Invalid page.') {
+                return NextResponse.json({
+                    error: {
+                        code: 'INVALID_PAGE',
+                        message: 'No more FAQs available',
+                        details: error.response.data
+                    }
+                }, { status: 400 });
+            }
             const apiError = handleAxiosError(error);
             return NextResponse.json({ error: apiError },
                 { status: error.response?.status || 400 }
