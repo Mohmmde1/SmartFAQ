@@ -3,14 +3,35 @@ import { twMerge } from "tailwind-merge"
 import jwt from "jsonwebtoken";
 import { getToken } from "next-auth/jwt";
 import { NextRequest } from "next/server";
+import { RefreshTokenResponse } from "@/types/api";
+import axios from "axios";
+import { getServerSession } from "next-auth";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 export namespace JwtUtils {
+  export const refreshToken = async (refreshToken: string): Promise<[string | null, string | null]> => {
+    try {
+      const response = await axios.post<RefreshTokenResponse>(
+        UrlUtils.makeUrl(
+          process.env.NEXT_PUBLIC_BACKEND_API_BASE || '',
+          "auth",
+          "token",
+          "refresh",
+        ),
+        { refresh: refreshToken }
+      );
+
+      return [response.data.access, response.data.refresh];
+    } catch {
+      return [null, null];
+    }
+  };
+
   export const getAccessToken = async (request: NextRequest) => {
-    const token = await getToken({
+    let token = await getToken({
       req: request,
       secret: process.env.JWT_SECRET,
       cookieName: 'next-auth.session-token',
@@ -19,9 +40,26 @@ export namespace JwtUtils {
     if (!token) {
       throw new Error('No token found');
     }
-    const { accessToken } = token;
+
+    let { accessToken } = token;
+
+    // Check if access token is expired
+    if (accessToken && isJwtExpired(accessToken as string)) {
+
+      await getServerSession(); // used to invoke jwt to refersh
+
+      const { accessToken, refreshToken } = token;
+
+      if (!accessToken || !refreshToken) {
+        throw new Error('Failed to refresh token');
+      }
+
+      return accessToken;
+    }
+
     return accessToken;
   }
+
   export const isJwtExpired = (token: string) => {
     // offset by 60 seconds, so we will check if the token is "almost expired".
     const currentTime: number = Math.round(Date.now() / 1000 + 60);

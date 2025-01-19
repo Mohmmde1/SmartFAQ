@@ -1,34 +1,11 @@
-import NextAuth, { type User, type Session } from "next-auth"
+import NextAuth from "next-auth"
 import axios from "axios"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt"
 import { JwtUtils, UrlUtils } from "@/lib/utils";
-import { RefreshTokenResponse, LoginResponse } from "@/types/api";
-import { AppError, handleAxiosError } from "@/lib/errors";
-namespace NextAuthUtils {
-
-    export const refreshToken = async function (refreshToken: string): Promise<[string | null, string | null]> {
-        try {
-            const response = await axios.post<RefreshTokenResponse>(
-                UrlUtils.makeUrl(
-                    process.env.NEXT_PUBLIC_BACKEND_API_BASE || '',
-                    "auth",
-                    "token",
-                    "refresh",
-                ),
-                {
-                    refresh: refreshToken,
-                },
-            );
-
-            const { access, refresh } = response.data;
-            return [access, refresh];
-        } catch {
-            return [null, null];
-        }
-    };
-}
+import { LoginResponse } from "@/types/api";
+import { AppError } from "@/lib/errors";
 
 export const authOptions = {
     secret: process.env.NEXTAUTH_SECRET,
@@ -154,7 +131,7 @@ export const authOptions = {
                         return token;
                     }
 
-                    const [newAccess, newRefresh] = await NextAuthUtils.refreshToken(
+                    const [newAccess, newRefresh] = await JwtUtils.refreshToken(
                         token.refreshToken as string
                     );
 

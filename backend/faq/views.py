@@ -19,7 +19,6 @@ class FAQViewSet(ModelViewSet):
         """
         Overwrite the default create method to include FAQ generation.
         """
-        print(serializer.validated_data)
         text = serializer.validated_data['content']
         number_of_faqs = serializer.validated_data.get('number_of_faqs', 3)
         title = self._generate_title(text)
