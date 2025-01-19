@@ -5,7 +5,7 @@ import { getToken } from "next-auth/jwt";
 import { NextRequest } from "next/server";
 import { RefreshTokenResponse } from "@/types/api";
 import axios from "axios";
-import { getServerSession } from "next-auth";
+import { getSession } from "next-auth/react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -46,7 +46,7 @@ export namespace JwtUtils {
     // Check if access token is expired
     if (accessToken && isJwtExpired(accessToken as string)) {
 
-      await getServerSession(); // used to invoke jwt to refersh
+      await getSession(); // used to invoke jwt to refersh
       token = await getToken({
         req: request,
         secret: process.env.JWT_SECRET,
