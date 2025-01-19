@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { JwtUtils, UrlUtils } from "@/lib/utils";
 import axios from "axios";
 import { handleAxiosError } from '@/lib/errors';
-import { FAQRequestBody, FAQListResponse } from "@/types/api";
+import { FAQRequestBody, PaginatedResponse, FAQ } from "@/types/api";
 
 export async function POST(request: NextRequest) {
     try {
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        const data: FAQListResponse = response.data;
-        return NextResponse.json(data.results, { status: 200 });
+        const data: PaginatedResponse<FAQ> = response.data;
+        return NextResponse.json(data, { status: 200 });
     } catch (error: any) {
         if (axios.isAxiosError(error)) {
             if (error.response?.data?.detail === 'Invalid page.') {

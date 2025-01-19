@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useInView } from 'react-intersection-observer'
-import { FAQ } from '@/types/api'
+import { FAQ, PaginatedResponse } from '@/types/api'
 import { AppError } from '@/lib/errors'
 import { toast } from 'sonner'
+import { faqService } from '@/services/faqService'
 
 export function useFAQs() {
     const [faqs, setFaqs] = useState<FAQ[]>([])
@@ -13,33 +14,34 @@ export function useFAQs() {
 
     const fetchFAQs = async (pageNumber: number) => {
         try {
-            const response = await fetch(`/api/faq?page=${pageNumber}`);
-            const result = await response.json();
+            const data = await faqService.getFAQPage(pageNumber)
 
-            if (!response.ok) {
-                if (result.error.code === 'INVALID_PAGE') {
-                    setHasMore(false);
-                    return;
-                }
-                throw new AppError(
-                    result.error.message,
-                    result.error.code,
-                    result.error.details
-                );
+            // Add null check and ensure results is an array
+            if (!data || !Array.isArray(data.results)) {
+                setHasMore(false)
+                return
             }
 
-            setFaqs(prev => pageNumber === 1 ? result : [...prev, ...result]);
-            setPage(pageNumber);
+            // Check for next page
+            setHasMore(!!data.next)
+
+            // Update FAQs safely
+            setFaqs(prev => pageNumber === 1 ?
+                data.results :
+                [...prev, ...(data.results || [])]
+            )
+            setPage(pageNumber)
+
         } catch (error) {
             if (error instanceof AppError) {
-                toast.error(error.message);
+                toast.error(error.message)
             } else {
-                toast.error('Failed to fetch FAQs');
+                toast.error('Failed to fetch FAQs')
             }
         } finally {
-            setIsFetchingFaqs(false);
+            setIsFetchingFaqs(false)
         }
-    };
+    }
 
     useEffect(() => {
         fetchFAQs(1)

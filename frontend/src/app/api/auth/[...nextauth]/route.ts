@@ -6,15 +6,18 @@ import { JWT } from "next-auth/jwt"
 import { JwtUtils, UrlUtils } from "@/lib/utils";
 import { LoginResponse } from "@/types/api";
 import { AppError } from "@/lib/errors";
+import { validateEnv } from "@/lib/config";
+
+validateEnv();
 
 export const authOptions = {
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.NEXTAUTH_SECRET as string,
     session: {
         jwt: true,
         maxAge: 24 * 60 * 60, // 24 hours
     },
     jwt: {
-        secret: process.env.JWT_SECRET,
+        secret: process.env.JWT_SECRET as string,
     },
     debug: process.env.NODE_ENV === "development",
     providers: [

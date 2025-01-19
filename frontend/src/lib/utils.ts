@@ -47,7 +47,14 @@ export namespace JwtUtils {
     if (accessToken && isJwtExpired(accessToken as string)) {
 
       await getServerSession(); // used to invoke jwt to refersh
-
+      token = await getToken({
+        req: request,
+        secret: process.env.JWT_SECRET,
+        cookieName: 'next-auth.session-token',
+      });
+      if (!token) {
+        throw new Error('No token found');
+      }
       const { accessToken, refreshToken } = token;
 
       if (!accessToken || !refreshToken) {
