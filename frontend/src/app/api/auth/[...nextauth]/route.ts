@@ -8,7 +8,14 @@ import { LoginResponse } from "@/types/api";
 import { AppError } from "@/lib/errors";
 import { validateEnv } from "@/lib/config";
 
-validateEnv();
+// validateEnv();
+
+declare module "next-auth/jwt" {
+    interface JWT {
+        access_token: string
+        refresh_token?: string
+    }
+}
 
 export const authOptions = {
     secret: process.env.NEXTAUTH_SECRET as string,

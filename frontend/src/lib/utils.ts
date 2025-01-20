@@ -1,11 +1,11 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import jwt from "jsonwebtoken";
-import { getToken } from "next-auth/jwt";
-import { NextRequest } from "next/server";
+import { getToken, JWT } from "next-auth/jwt";
+import { NextRequest, NextResponse } from "next/server";
 import { RefreshTokenResponse } from "@/types/api";
 import axios from "axios";
-import { getSession } from "next-auth/react";
+
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -41,58 +41,70 @@ export namespace JwtUtils {
       throw new Error('No token found');
     }
 
-    let { accessToken } = token;
+    const oldAccessToken = token.accessToken;
 
-    // Check if access token is expired
-    if (accessToken && isJwtExpired(accessToken as string)) {
-
-      await getSession(); // used to invoke jwt to refersh
-      token = await getToken({
-        req: request,
-        secret: process.env.JWT_SECRET,
-        cookieName: 'next-auth.session-token',
-      });
-      if (!token) {
-        throw new Error('No token found');
+    if (!oldAccessToken || isJwtExpired(oldAccessToken as string)) {
+      if (!token.refreshToken) {
+        throw new Error('No refresh token available');
       }
-      const { accessToken, refreshToken } = token;
 
-      if (!accessToken || !refreshToken) {
+      // Refresh token
+      const [newAccess, newRefresh] = await refreshToken(token.refreshToken as string);
+      if (!newAccess || !newRefresh) {
         throw new Error('Failed to refresh token');
       }
 
-      return accessToken;
+      // Create updated token
+      const updatedToken = {
+        ...token,
+        accessToken: newAccess,
+        refreshToken: newRefresh
+      };
+
+      // Encode and set cookie
+      const encoded = jwt.sign(updatedToken, process.env.JWT_SECRET!);
+      const response = new NextResponse(null);
+      response.cookies.set('next-auth.session-token', encoded, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      });
+      request.cookies.set('next-auth.session-token', encoded);
+
+      return newAccess;
     }
 
-    return accessToken;
+    return oldAccessToken;
   }
 
-  export const isJwtExpired = (token: string) => {
-    // offset by 60 seconds, so we will check if the token is "almost expired".
-    const currentTime: number = Math.round(Date.now() / 1000 + 60);
-    const decoded = jwt.decode(token) as jwt.JwtPayload | null;
+  export const isJwtExpired = (token: string): boolean => {
+    try {
+      const currentTime = Math.round(Date.now() / 1000);
+      const decoded = jwt.decode(token) as jwt.JwtPayload | null;
 
-    console.log(`Current time + 60 seconds: ${new Date(currentTime * 1000)}`);
-    if (typeof decoded === "object" && decoded !== null && "exp" in decoded) {
-      if (decoded["exp"] !== undefined) {
-        console.log(`Token lifetime: ${new Date(decoded["exp"] * 1000)}`);
-      }
-    }
-
-    if (typeof decoded === "object" && decoded !== null && "exp" in decoded) {
-      const adjustedExpiry = decoded["exp"];
-
-      if (adjustedExpiry !== undefined && adjustedExpiry < currentTime) {
-        console.log("Token expired");
+      if (!decoded || !decoded.exp) {
         return true;
       }
 
-      console.log("Token has not expired yet");
-      return false;
-    }
+      // Add 60-second buffer for token refresh
+      const expiryWithBuffer = decoded.exp - 60;
+      const isExpired = currentTime >= expiryWithBuffer;
 
-    console.log('Token["exp"] does not exist');
-    return true;
+      if (process.env.NODE_ENV === 'development') {
+        console.log({
+          currentTime: new Date(currentTime * 1000).toISOString(),
+          tokenExpiry: new Date(decoded.exp * 1000).toISOString(),
+          expiryWithBuffer: new Date(expiryWithBuffer * 1000).toISOString(),
+          isExpired
+        });
+      }
+
+      return isExpired;
+    } catch (error) {
+      console.error('Error checking JWT expiry:', error);
+      return true;
+    }
   };
 }
 
