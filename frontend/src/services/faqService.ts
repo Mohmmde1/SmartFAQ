@@ -33,7 +33,33 @@ export const faqService = {
         }
         return result
     },
+    async update(faqContent: string | null, number_of_faqs: number | null, tone: string | null, id: string) {
 
+        const response = await fetch(`/api/faq/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: faqContent,
+                number_of_faqs: number_of_faqs,
+                tone,
+            }),
+        })
+
+        const result = await response.json()
+
+        if (!response.ok) {
+            throw new AppError(
+                result.error.message,
+                result.error.code,
+                result.error.details
+            )
+        }
+
+        return result
+
+    },
     async getAll() {
         const response = await fetch("/api/faq")
         const result = await response.json()

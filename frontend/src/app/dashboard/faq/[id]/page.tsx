@@ -9,10 +9,14 @@ import { LoadingSkeleton } from '@/components/faq/loading-skeleton'
 import { FAQInput } from '@/components/faq/faq-input'
 import { FAQOptions } from '@/components/faq/faq-options'
 import { GeneratedFAQs } from '@/components/faq/generated-faqs'
+import { faqService } from '@/services/faqService'
 
 export default function FAQGenerationPage() {
     const params = useParams()
     const { id } = params
+    if (typeof id !== 'string') {
+        throw new Error("Can't access id")
+    }
     const [faq, setFaq] = useState<FAQ | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [faqContent, setFaqContent] = useState('')
@@ -51,29 +55,15 @@ export default function FAQGenerationPage() {
     const handleGenerateFAQs = async () => {
         setIsLoading(true)
         try {
-            const response = await fetch(`/api/faq/${id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    content: faqContent,
-                    number_of_faqs: numQuestions,
-                    tone,
-                }),
-            })
+            const result = await faqService.update(
 
-            const data = await response.json()
+                faqContent,
+                numQuestions,
+                tone, id
 
-            if (!response.ok) {
-                throw new AppError(
-                    data.error.message,
-                    data.error.code,
-                    data.error.details
-                )
-            }
+            )
 
-            setFaq(data)
+            setFaq(result)
             toast.success('FAQs generated successfully!')
         } catch (error) {
             if (error instanceof AppError) {

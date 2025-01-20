@@ -45,7 +45,7 @@ export function FAQOptions({ numQuestions, tone, onQuestionsChange, onToneChange
                     </Select>
                 </div>
                 <Button onClick={onGenerate} className="w-full">
-                    Generate FAQs
+                    Update FAQs
                 </Button>
             </CardContent>
         </Card>

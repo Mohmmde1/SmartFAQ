@@ -8,12 +8,10 @@ export async function POST(request: NextRequest) {
     try {
         const access_token = await JwtUtils.getAccessToken(request);
         const body: FAQRequestBody = await request.json();
-        console.log(body)
         const url = UrlUtils.makeUrl(
             process.env.NEXT_PUBLIC_BACKEND_API_BASE || "",
             "faq",
         );
-        console.log("URL", url);
         const response = await axios.post(url, body, {
             headers: {
                 'Content-Type': 'application/json',

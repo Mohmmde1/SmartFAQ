@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { faqService } from '@/services/faqService'
 import { AppError } from '@/lib/errors'
