@@ -215,4 +215,4 @@ REST_AUTH = {
 ###############################################################################
 # Ollama AI Settings
 ###############################################################################
-OLLAMA_MODEL = os.environ.get('OLLAMA_AI_MODEL', 'deepseek-r1')
+OLLAMA_MODEL = os.environ.get('OLLAMA_AI_MODEL', 'llama3.2')

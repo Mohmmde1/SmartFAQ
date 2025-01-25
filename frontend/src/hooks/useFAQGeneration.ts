@@ -5,8 +5,7 @@ import { AppError } from '@/lib/errors'
 import { FAQ } from '@/types/api'
 
 export function useFAQGeneration(
-    faqs: FAQ[],
-    setFaqs: (faqs: FAQ[]) => void
+    onSuccess: () => void
 ) {
     const [inputText, setInputText] = useState('')
     const [numQuestions, setNumQuestions] = useState(5)
@@ -16,19 +15,19 @@ export function useFAQGeneration(
     const handleGenerate = async () => {
         setIsLoading(true)
         try {
-            const result = await faqService.generate({
+            await faqService.generate({
                 content: inputText,
                 number_of_faqs: numQuestions,
                 tone: tone
             })
-
-            setFaqs([...faqs, result])
 
             // Reset form
             setInputText('')
             setNumQuestions(5)
             setTone('neutral')
 
+            // Trigger refresh of FAQ list
+            onSuccess()
             toast.success("FAQs generated successfully!")
         } catch (error) {
             if (error instanceof AppError) {

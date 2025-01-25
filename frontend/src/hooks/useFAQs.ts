@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { FAQ, PaginatedResponse } from '@/types/api'
 import { AppError } from '@/lib/errors'
@@ -43,6 +43,24 @@ export function useFAQs() {
         }
     }
 
+    const refreshFAQs = useCallback(async () => {
+        setIsFetchingFaqs(true)
+        setPage(1)
+        try {
+            const data = await faqService.getFAQPage(1)
+            setFaqs(data.results)
+            setHasMore(!!data.next)
+        } catch (error) {
+            if (error instanceof AppError) {
+                toast.error(error.message)
+            } else {
+                toast.error('Failed to fetch FAQs')
+            }
+        } finally {
+            setIsFetchingFaqs(false)
+        }
+    }, [])
+
     useEffect(() => {
         fetchFAQs(1)
     }, [])
@@ -58,6 +76,7 @@ export function useFAQs() {
         setFaqs,
         isFetchingFaqs,
         hasMore,
-        ref
+        ref,
+        refreshFAQs
     }
 }

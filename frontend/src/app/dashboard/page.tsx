@@ -6,8 +6,8 @@ import { FAQList } from '@/components/faq/faq-list'
 import { useFAQGeneration } from '@/hooks/useFAQGeneration'
 
 export default function Dashboard() {
-    const { faqs, setFaqs, isFetchingFaqs, hasMore, ref } = useFAQs()
-    const faqGeneration = useFAQGeneration(faqs, setFaqs)
+    const { faqs, isFetchingFaqs, hasMore, ref, refreshFAQs } = useFAQs()
+    const faqGeneration = useFAQGeneration(refreshFAQs)
 
     return (
         <div className="container mx-auto px-4 py-8">
