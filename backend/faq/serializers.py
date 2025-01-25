@@ -26,7 +26,7 @@ class FAQSerializer(serializers.ModelSerializer):
         default=5
     )
     tone = serializers.ChoiceField(
-        choices=['neutral', 'friendly', 'casual'],
+        choices=['neutral', 'formal', 'casual'],
         default='neutral'
     )
 
