@@ -22,7 +22,8 @@ class FAQPrompt:
     TEMPLATE = """
     Generate {num_questions} frequently asked questions and answers about the following text.
     Use a {tone} tone in both questions and answers.
-    Format the response as JSON with 'generated_faqs' containing an array of objects with 'question' and 'answer' fields.
+    Format the response as JSON with 'generated_faqs' containing an array of objects with
+    'question' and 'answer' fields.
 
     Text: {text}
     """
