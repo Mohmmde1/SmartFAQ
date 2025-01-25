@@ -5,8 +5,15 @@ from .models import QuestionAnswer
 
 
 def generate_faq(text: str, number_of_faqs: int = 5) -> List[QuestionAnswer]:
+    """
+    Generate FAQs using the FAQGenerator class.
+
+    Args:
+        text (str): Input text to generate FAQs from.
+        number_of_faqs (int): Number of FAQs to generate.
+
+    Returns:
+        List[QuestionAnswer]: List of QuestionAnswer objects with generated FAQs.
+    """
     generator = FAQGenerator()
-    sentences, phrases = generator.preprocess_text(text)
-    ranked_phrases = generator.rank_phrases(text, phrases)
-    questions = generator.generate_questions(ranked_phrases, number_of_faqs)
-    return generator.generate_answers(questions, text)
+    return generator.generate_faqs(text, number_of_faqs)

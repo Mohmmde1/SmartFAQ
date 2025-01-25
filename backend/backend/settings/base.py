@@ -210,3 +210,9 @@ REST_AUTH = {
     'USE_JWT': True,
     'JWT_AUTH_HTTPONLY':False, # Important for the frontend to access the refresh token
 }
+
+
+###############################################################################
+# Ollama AI Settings
+###############################################################################
+OLLAMA_MODEL = os.environ.get('OLLAMA_AI_MODEL', 'deepseek-r1')

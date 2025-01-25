@@ -25,6 +25,7 @@ torch = "^2.5.1"
 torchvision = "^0.20.1"
 torchaudio = "^2.5.1"
 haystack-ai = "^2.9.0"
+ollama = "^0.4.7"
 
 
 [tool.poetry.group.dev.dependencies]

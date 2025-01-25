@@ -1,89 +1,52 @@
-import re
-from typing import List, Tuple
+from typing import List
 
-import spacy
-from sklearn.feature_extraction.text import TfidfVectorizer
-from transformers import pipeline
+import ollama
+from django.conf import settings
+from pydantic import BaseModel
 
 from .models import QuestionAnswer
 
 
+class QuestionAnswerSchema(BaseModel):
+    question:str
+    answer:str
+
+class FAQ(BaseModel):
+    generated_faqs:List[QuestionAnswerSchema]
+
 class FAQGenerator:
-    def __init__(self, model_name: str = "deepset/roberta-base-squad2"):
-        self.nlp = spacy.load("en_core_web_sm")
-        self.qa_models = [
-            pipeline('question-answering', model="deepset/roberta-base-squad2"),
-            pipeline('question-answering', model="distilbert-base-uncased-distilled-squad")
-        ]
-        self.templates = [
-            "What is {}?",
-            "Why is {} important?",
-            "How does {} work?",
-            "What are the benefits of {}?",
-            "Can you explain {}?",
-            "What are the key aspects of {}?"
-        ]
+    def __init__(self, model_name: str = settings.OLLAMA_MODEL):
+        self.model_name = model_name
 
-    def preprocess_text(self, text: str) -> Tuple[List[str], List[str]]:
-        text = re.sub(r'\s+', ' ', text).strip()
-        doc = self.nlp(text)
+    def generate_faqs(self, text: str, num_questions: int = 5) -> List[dict]:
+        """
+        Main method to generate FAQs from input text.
+        """
+        faqs = []
 
-        sentences = [sent.text.strip() for sent in doc.sents]
-        important_phrases = {
-            ent.text for ent in doc.ents
-            if ent.label_ in ['ORG', 'PERSON', 'GPE', 'PRODUCT', 'EVENT']
-        }
-        important_phrases.update(
-            chunk.text for chunk in doc.noun_chunks
-            if chunk.text not in important_phrases
-        )
-
-        return sentences, list(important_phrases)
-
-    def rank_phrases(self, text: str, phrases: List[str]) -> List[str]:
-        vectorizer = TfidfVectorizer()
-        tfidf_matrix = vectorizer.fit_transform([text])
-        feature_names = vectorizer.get_feature_names_out()
-
-        phrase_scores = {
-            phrase: sum(
-                tfidf_matrix[0, feature_names.tolist().index(word)]
-                for word in phrase.split()
-                if word in feature_names
+        try:
+            # Generate a question and answer using Ollama
+            response = ollama.chat(
+                model=self.model_name,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Generate {num_questions} faqs of question and answer about: {text}",
+                    },
+                ],
+                format=FAQ.model_json_schema()
             )
-            for phrase in phrases
-        }
+            question_answer = FAQ.model_validate_json(response.message.content)
 
-        return [
-            phrase for phrase, _ in
-            sorted(phrase_scores.items(), key=lambda x: x[1], reverse=True)
-        ]
-
-    def generate_questions(self, phrases: List[str], num_questions: int) -> List[str]:
-        return [
-            self.templates[i % len(self.templates)].format(phrase)
-            for i, phrase in enumerate(phrases[:num_questions])
-        ]
-
-    def generate_answers(self, questions: List[str], context: str) -> List[dict]:
-        answers = []
-        for question in questions:
-            best_answer = None
-            best_score = -1
-
-            for model in self.qa_models:
-                try:
-                    result = model({'question': question, 'context': context})
-                    if result['score'] > best_score:
-                        best_answer = result['answer']
-                        best_score = result['score']
-                except Exception:
-                    continue
-
-            qa = QuestionAnswer.objects.create(
-                question=question,
-                answer=best_answer if best_answer else "Answer not available."
-            )
-            answers.append(qa)
-
-        return answers
+            for faq in question_answer.generated_faqs:
+                question = faq.question
+                answer = faq.answer
+                qa = QuestionAnswer.objects.create(
+                    question=question,
+                    answer=answer
+                )
+                faqs.append(qa)
+        except Exception as e:
+            answer = f"Error generating FAQ: {str(e)}"
+            print(answer)
+        return faqs
