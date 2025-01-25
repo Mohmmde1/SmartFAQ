@@ -23,10 +23,7 @@ class FAQ(ModelBase):
     title = models.CharField(max_length=255)
     content = models.TextField()
     generated_faqs = models.ManyToManyField(QuestionAnswer, blank=True)
+    number_of_faqs = models.PositiveIntegerField(default=3)
 
     def __str__(self):
         return self.title
-
-    @property
-    def number_of_faqs(self):
-        return self.generated_faqs.count()
