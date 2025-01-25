@@ -2,7 +2,7 @@ import { AppError } from '@/lib/errors'
 import { FAQ, PaginatedResponse } from '@/types/api'
 
 export const faqService = {
-    async generate(data: { content: string; number_of_faqs: number }) {
+    async generate(data: { content: string; number_of_faqs: number, tone: string }) {
         const response = await fetch("/api/faq", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

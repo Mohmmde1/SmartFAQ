@@ -4,7 +4,7 @@ from .faq_generator import FAQGenerator
 from .models import QuestionAnswer
 
 
-def generate_faq(text: str, number_of_faqs: int = 5) -> List[QuestionAnswer]:
+def generate_faq(text: str, number_of_faqs: int = 5, tone: str='netural') -> List[QuestionAnswer]:
     """
     Generate FAQs using the FAQGenerator class.
 
@@ -16,4 +16,4 @@ def generate_faq(text: str, number_of_faqs: int = 5) -> List[QuestionAnswer]:
         List[QuestionAnswer]: List of QuestionAnswer objects with generated FAQs.
     """
     generator = FAQGenerator()
-    return generator.generate_faqs(text, number_of_faqs)
+    return generator.generate_faqs(text, number_of_faqs, tone)

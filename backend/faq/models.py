@@ -19,11 +19,17 @@ class QuestionAnswer(ModelBase):
         return self.question
 
 class FAQ(ModelBase):
+    TONE_CHOICES = [
+        ('formal', 'Formal'),
+        ('netural', 'Neutral'),
+        ('casual', 'Casual'),
+    ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='faqs')
     title = models.CharField(max_length=255)
     content = models.TextField()
     generated_faqs = models.ManyToManyField(QuestionAnswer, blank=True)
     number_of_faqs = models.PositiveIntegerField(default=3)
+    tone = models.CharField(choices=TONE_CHOICES, default='neutral')
 
     def __str__(self):
         return self.title

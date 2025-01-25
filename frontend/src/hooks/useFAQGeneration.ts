@@ -19,6 +19,7 @@ export function useFAQGeneration(
             const result = await faqService.generate({
                 content: inputText,
                 number_of_faqs: numQuestions,
+                tone: tone
             })
 
             setFaqs([...faqs, result])

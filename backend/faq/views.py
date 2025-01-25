@@ -21,11 +21,12 @@ class FAQViewSet(ModelViewSet):
         """Process FAQ data and generate FAQs."""
         text = serializer.validated_data['content']
         number_of_faqs = serializer.validated_data.get('number_of_faqs', 3)
+        tone = serializer.validated_data.get('tone', 'netural')
 
         return {
             'user': self.request.user,
             'title': self._generate_title(text),
-            'generated_faqs': generate_faq(text, number_of_faqs)
+            'generated_faqs': generate_faq(text, number_of_faqs, tone)
         }
 
     def perform_create(self, serializer: ModelSerializer) -> None:
