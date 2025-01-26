@@ -39,4 +39,4 @@ class FAQViewSet(ModelViewSet):
 
     def get_queryset(self):
         """Filter FAQs by current user."""
-        return FAQ.objects.filter(user=self.request.user)
+        return FAQ.objects.filter(user=self.request.user).order_by('created_at')
