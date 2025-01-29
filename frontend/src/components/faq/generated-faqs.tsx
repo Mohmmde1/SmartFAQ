@@ -5,7 +5,7 @@ import { ScrollArea } from "../ui/scroll-area"
 
 
 export function GeneratedFAQs({ faqs }: { faqs: QuestionAnswer[] }) {
-
+    console.log(faqs)
 
     return (
         <Card className="md:col-span-2">

@@ -25,6 +25,7 @@ ROOT_URLCONF = 'backend.urls'
 ###############################################################################
 # Django built-in apps
 DJANGO_APPS = [
+    'daphne', # must be before 'django.contrib.staticfiles'
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -244,8 +245,8 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
-            'filters': ['require_debug_true'],
+            'level': 'DEBUG',
+            'filters': [],
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
@@ -270,7 +271,7 @@ LOGGING = {
         },
         'faq': {
             'handlers': ['console', 'faq_file'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'auths': {
@@ -278,5 +279,15 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+    },
+}
+
+###############################################################################
+# ASGI Settings
+###############################################################################
+ASGI_APPLICATION = 'backend.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
