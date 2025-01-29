@@ -1,3 +1,4 @@
+import { useSession } from 'next-auth/react'
 import { useState, useEffect, useCallback } from 'react'
 
 
@@ -5,9 +6,18 @@ export function useWebSocket() {
     const [socket, setSocket] = useState<WebSocket | null>(null)
     const [isConnected, setIsConnected] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const { data: session, status } = useSession()
 
     useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8000/ws/faq/")
+        if (status === 'loading') return;
+
+        const accessToken = session?.accessToken;
+        if (!accessToken) {
+            setError('No authentication token found')
+            return
+        }
+        const baseUrl = "ws://localhost:8000/ws/faq/"
+        const ws = new WebSocket(`${baseUrl}?token=${accessToken}`)
 
         ws.onopen = () => {
             setIsConnected(true)
@@ -28,7 +38,7 @@ export function useWebSocket() {
         return () => {
             ws.close()
         }
-    }, [])
+    }, [session, status])
 
     const sendMessage = useCallback((data: any) => {
         if (socket?.readyState === WebSocket.OPEN) {

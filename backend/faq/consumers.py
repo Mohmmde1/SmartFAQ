@@ -4,7 +4,6 @@ import logging
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
-from auths.models import User
 from faq.async_faq_generator import FAQGenerator
 
 from .models import FAQ
@@ -12,28 +11,20 @@ from .models import FAQ
 logger = logging.getLogger(__name__)
 
 
-
-
 class FAQConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+
         logger.info(f"New WebSocket connection: {self.channel_name}")
         try:
             # Get user asynchronously
-            user = await sync_to_async(User.objects.first)()
-            if not user:
+            self.user = self.scope['user']
+            if not self.user:
                 logger.error("No user found")
                 await self.close()
                 return
 
-            # Create FAQ instance with async user
-            self.faq = await sync_to_async(FAQ.objects.create)(
-                title="Generated FAQ",
-                content="",
-                user=user
-            )
-            logger.info(f"Created FAQ with id: {self.faq.id} for user: {user.id}")
             await self.accept()
-
+            self.faq = None
         except Exception as e:
             logger.error(f"Error in connect: {str(e)}", exc_info=True)
             await self.close()
@@ -42,6 +33,17 @@ class FAQConsumer(AsyncWebsocketConsumer):
         logger.info(f"WebSocket disconnected: {self.channel_name}, code: {close_code}")
 
     async def receive(self, text_data):
+        if not self.faq:
+            # Create FAQ instance with async user
+            self.faq = await sync_to_async(FAQ.objects.create)(
+                title="Generated FAQ",
+                content="",
+                user=self.user
+            )
+            logger.info(f"Created FAQ with id: {self.faq.id} for user: {self.user.email}")
+        else:
+            logger.info(f"FAQ already exists: {self.faq.id}")
+
         logger.info(f"Received WebSocket message from: {self.channel_name}")
         data = json.loads(text_data)
         text = data.get("text")

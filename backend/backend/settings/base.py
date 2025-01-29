@@ -202,6 +202,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
     'SIGNING_KEY': JWT_SECRET_KEY,
+    'ALGORITHM': 'HS256',
 }
 
 ###############################################################################

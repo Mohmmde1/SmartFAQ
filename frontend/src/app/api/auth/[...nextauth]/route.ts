@@ -7,6 +7,7 @@ import { JwtUtils, UrlUtils } from "@/lib/utils";
 import { LoginResponse } from "@/types/api";
 import { AppError } from "@/lib/errors";
 import { validateEnv } from "@/lib/config";
+import { Session } from "next-auth"
 
 // validateEnv();
 
@@ -14,6 +15,17 @@ declare module "next-auth/jwt" {
     interface JWT {
         access_token: string
         refresh_token?: string
+    }
+}
+
+declare module "next-auth" {
+    interface Session {
+        accessToken?: string
+        user: {
+            id: string
+            email: string
+            name: string
+        }
     }
 }
 
@@ -162,6 +174,22 @@ export const authOptions = {
                 return token;
             }
         },
+
+        async session({ session, token }: { session: Session; token: JWT }) {
+            if (token.accessToken) {
+                session.accessToken = token.accessToken as string;
+            }
+            console.log('Session Callback Called:', {
+                hasToken: !!token,
+                hasSession: !!session,
+                hasAccessToken: !!session.accessToken,
+                tokenExpired: token.accessToken ?
+                    JwtUtils.isJwtExpired(token.accessToken as string) : null,
+                timestamp: new Date().toISOString(),
+            });
+
+            return session;
+        }
     },
 };
 
