@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChartIcon, FileText, Plus, ArrowRight, Users, Clock } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useFAQs } from "@/hooks/useFAQs"
+import { formatDistance } from "date-fns"
 
 // Mock data for recent FAQs
 const recentFaqs = [
@@ -37,6 +40,8 @@ const faqCategoriesData = [
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
 
 export default function Dashboard() {
+    const { faqs, isFetchingFaqs } = useFAQs()
+
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
@@ -133,32 +138,51 @@ export default function Dashboard() {
                     <CardTitle>Recent FAQs</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-6">
-                        {recentFaqs.map((faq) => (
-                            <div key={faq.id} className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-sm font-semibold">{faq.title}</h3>
-                                    <p className="text-xs text-muted-foreground">
-                                        {faq.questionsCount} questions • Created on {faq.createdAt}
-                                    </p>
+                    <ScrollArea className="h-[400px]">
+                        <div className="space-y-6">
+                            {isFetchingFaqs ? (
+                                <div className="flex items-center justify-center h-[300px]">
+                                    <div className="animate-spin">Loading...</div>
                                 </div>
-                                <Button variant="ghost" size="sm" asChild>
-                                    <Link href={`/faq/${faq.id}`}>
-                                        <ArrowRight className="h-4 w-4" />
-                                    </Link>
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                    <Button variant="outline" className="w-full mt-6">
-                        View All FAQs
+                                // ) : error ? (
+                                //     <div className="text-destructive text-center">{error}</div>
+                            ) : faqs.length === 0 ? (
+                                <div className="text-muted-foreground text-center">
+                                    No FAQs created yet
+                                </div>
+                            ) : (
+                                faqs.map((faq) => (
+                                    <div key={faq.id} className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-sm font-semibold">{faq.title}</h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                {faq.generated_faqs.length} questions • Created{' '}
+                                                {formatDistance(new Date(faq.created_at), new Date(), {
+                                                    addSuffix: true,
+                                                })}
+                                            </p>
+                                        </div>
+                                        <Button variant="ghost" size="sm" asChild>
+                                            <Link href={`/faq/${faq.id}`}>
+                                                <ArrowRight className="h-4 w-4" />
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </ScrollArea>
+                    <Button variant="outline" className="w-full mt-6" asChild>
+                        <Link href="/faqs">View All FAQs</Link>
                     </Button>
                 </CardContent>
             </Card>
 
             <div className="flex justify-end">
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Create New FAQ
+                <Button asChild>
+                    <Link href="/faq/new">
+                        <Plus className="mr-2 h-4 w-4" /> Create New FAQ
+                    </Link>
                 </Button>
             </div>
         </div>
