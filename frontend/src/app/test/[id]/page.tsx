@@ -44,6 +44,7 @@ export default function SmartFAQ() {
                 setInputText(data.content)
                 setMessages(data.generated_faqs || [])
                 setTone(data.tone || "neutral")
+                setNumQuestions(data.number_of_faqs || 5)
             } catch (error) {
                 if (error instanceof AppError) {
                     toast.error(error.message)
