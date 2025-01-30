@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { useRouter } from 'next/navigation';
 
 import { toast } from 'sonner';
 import { GeneratedFAQs } from '@/components/faq/generated-faqs';
@@ -16,6 +17,7 @@ import { AppError } from '@/lib/errors';
 export default function SmartFAQ() {
     const params = useParams()
     const { id } = params
+    const router = useRouter();
 
     const [faq, setFaq] = useState<Partial<FAQ> | null>(null);
     const [messages, setMessages] = useState<QuestionAnswer[]>([]);
@@ -83,6 +85,10 @@ export default function SmartFAQ() {
                         if (data.status === 'complete' && data.faq) {
                             setFaq(data.faq);
                             setIsLoading(false);
+                            // Update URL if it's a new FAQ
+                            if (id === 'new' && data.faq.id) {
+                                router.replace(`/test/${data.faq.id}`);
+                            }
                         }
                         break;
 
@@ -97,7 +103,7 @@ export default function SmartFAQ() {
                 toast.error('Failed to process server response');
             }
         };
-    }, [socket]);
+    }, [socket, id, router]);
 
     const handleGenerate = useCallback(() => {
         if (!inputText.trim()) {
@@ -148,6 +154,7 @@ export default function SmartFAQ() {
                     numQuestions={numQuestions}
                     tone={tone}
                     disabled={isLoading}
+                    update={id !== 'new'}
                     onQuestionsChange={setNumQuestions}
                     onToneChange={setTone}
                     onGenerate={handleGenerate}

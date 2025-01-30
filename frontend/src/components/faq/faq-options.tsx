@@ -8,12 +8,13 @@ type FAQOptionsProps = {
     numQuestions: number;
     tone: string;
     disabled?: boolean;
+    update?: boolean;
     onQuestionsChange: (value: number) => void;
     onToneChange: (value: string) => void;
     onGenerate: () => void;
 }
 
-export function FAQOptions({ numQuestions, tone, disabled = false, onQuestionsChange, onToneChange, onGenerate }: FAQOptionsProps) {
+export function FAQOptions({ numQuestions, tone, disabled = false, onQuestionsChange, onToneChange, onGenerate, update = true }: FAQOptionsProps) {
     return (
         <Card>
             <CardHeader>
@@ -47,7 +48,7 @@ export function FAQOptions({ numQuestions, tone, disabled = false, onQuestionsCh
                     </Select>
                 </div>
                 <Button onClick={onGenerate} disabled={disabled} className="w-full">
-                    Update FAQs
+                    {update ? 'Update FAQ' : 'Generate FAQ'}
                 </Button>
             </CardContent>
         </Card>
