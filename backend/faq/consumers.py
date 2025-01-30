@@ -33,6 +33,21 @@ class FAQConsumer(AsyncWebsocketConsumer):
         logger.info(f"WebSocket disconnected: {self.channel_name}, code: {close_code}")
 
     async def receive(self, text_data):
+        logger.info(f"Received WebSocket message from: {self.channel_name}")
+        data = json.loads(text_data)
+        text = data.get("text")
+        num_questions = data.get("num_questions", 5)
+        tone = data.get("tone", "neutral")
+        faq_id = data.get("faq_id", None)
+        try:
+            if faq_id:
+                self.faq = await sync_to_async(FAQ.objects.get)(id=faq_id, user=self.user)
+                await sync_to_async(self.faq.generated_faqs.all().delete)()
+                logger.info(f"Found FAQ with id: {faq_id}")
+        except FAQ.DoesNotExist:
+            logger.warning(f"FAQ not found with id: {faq_id}")
+            self.faq = None
+
         if not self.faq:
             # Create FAQ instance with async user
             self.faq = await sync_to_async(FAQ.objects.create)(
@@ -41,14 +56,17 @@ class FAQConsumer(AsyncWebsocketConsumer):
                 user=self.user
             )
             logger.info(f"Created FAQ with id: {self.faq.id} for user: {self.user.email}")
+        elif faq_id:
+            try:
+                self.faq = await sync_to_async(FAQ.objects.get)(id=faq_id, user=self.user)
+                await sync_to_async(self.faq.generated_faqs.all().delete)()
+                logger.info(f"FAQ already exists: {self.faq.id}, updating")
+            except FAQ.DoesNotExist as err:
+                logger.warning(f"FAQ not found with id: {faq_id}")
+                raise ValueError("FAQ not found") from err
         else:
             logger.info(f"FAQ already exists: {self.faq.id}")
 
-        logger.info(f"Received WebSocket message from: {self.channel_name}")
-        data = json.loads(text_data)
-        text = data.get("text")
-        num_questions = data.get("num_questions", 5)
-        tone = data.get("tone", "neutral")
 
         if not text:
             logger.warning(f"Empty text received from: {self.channel_name}")

@@ -9,9 +9,14 @@ import { FAQ, QuestionAnswer } from '@/types/api';
 import { WebSocketMessage } from '@/types/websocket';
 import { FAQInput } from '@/components/faq/faq-input';
 import { FAQOptions } from '@/components/faq/faq-options';
+import { useParams } from 'next/navigation';
+import { AppError } from '@/lib/errors';
 
 
 export default function SmartFAQ() {
+    const params = useParams()
+    const { id } = params
+
     const [faq, setFaq] = useState<Partial<FAQ> | null>(null);
     const [messages, setMessages] = useState<QuestionAnswer[]>([]);
     const [inputText, setInputText] = useState("");
@@ -23,6 +28,35 @@ export default function SmartFAQ() {
     const { socket, isConnected, sendMessage } = useWebSocket();
 
     useEffect(() => {
+        const fetchFaq = async () => {
+            try {
+                const response = await fetch(`/api/faq/${id}`)
+                const data = await response.json()
+
+                if (!response.ok) {
+                    throw new AppError(
+                        data.error.message,
+                        data.error.code,
+                        data.error.details
+                    )
+                }
+                setFaq(data)
+                setInputText(data.content)
+                setMessages(data.generated_faqs || [])
+                setTone(data.tone || "neutral")
+            } catch (error) {
+                if (error instanceof AppError) {
+                    toast.error(error.message)
+                } else {
+                    toast.error('Failed to fetch FAQ')
+                }
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        if (id) {
+            fetchFaq()
+        }
         if (!socket) return;
 
         socket.onmessage = (event) => {
@@ -84,7 +118,8 @@ export default function SmartFAQ() {
             type: 'generate',
             text: inputText,
             num_questions: numQuestions,
-            tone: tone
+            tone: tone,
+            faq_id: id
         });
 
         if (!success) {
@@ -117,7 +152,7 @@ export default function SmartFAQ() {
                     onGenerate={handleGenerate}
                 />
                 <GeneratedFAQs
-                    faqs={messages || []}
+                    faqs={messages}
                 />
             </div>
         </div>

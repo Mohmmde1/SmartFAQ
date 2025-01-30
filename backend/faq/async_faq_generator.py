@@ -74,12 +74,12 @@ class FAQGenerator:
                     buffer += chunk['message']['content']
                     match = re.search(pattern, buffer)
                     if match:
-                        logger.info("Creating new FAQ from matched content")
+                        logger.info("Creating new QuestionsAnswer from matched content")
                         faq = await sync_to_async(QuestionAnswer.objects.create)(
                             question=match.group(1),
                             answer=match.group(2)
                         )
-                        logger.debug(f"Created FAQ with id: {faq.id}")
+                        logger.debug(f"Created QuestionsAnswer with id: {faq.id}")
                         buffer = ""
                         yield faq
 
