@@ -20,6 +20,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
+            {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -76,126 +77,131 @@ export default function Dashboard() {
                 </Card>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2 mb-8">
-                <Card>
+            {/* Main Content Grid */}
+            <div className="grid gap-8 lg:grid-cols-2">
+                {/* Recent FAQs - Left Column */}
+                <Card className="h-full">
                     <CardHeader>
-                        <CardTitle>FAQ Creation Over Time (Daily Trend)</CardTitle>
+                        <CardTitle>Recent FAQs</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            {stats?.daily_trends && stats.daily_trends.length > 0 ? (
-                                <BarChart
-                                    data={stats.daily_trends}
-                                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                                >
-                                    <XAxis
-                                        dataKey="day"
-                                        tick={{ fontSize: 12 }}
-                                    />
-                                    <YAxis
-                                        allowDecimals={false}
-                                        tick={{ fontSize: 12 }}
-                                        domain={[0, 'dataMax + 1']}
-                                    />
-                                    <Tooltip />
-                                    <Bar
-                                        dataKey="count"
+                        <ScrollArea className="h-[400px]">
+                            <div className="space-y-6">
+                                {isFetchingFaqs ? (
+                                    <div className="flex items-center justify-center h-[300px]">
+                                        <div className="animate-spin">Loading...</div>
+                                    </div>
+                                    // ) : error ? (
+                                    //     <div className="text-destructive text-center">{error}</div>
+                                ) : faqs.length === 0 ? (
+                                    <div className="text-muted-foreground text-center">
+                                        No FAQs created yet
+                                    </div>
+                                ) : (
+                                    faqs.map((faq) => (
+                                        <div key={faq.id} className="flex items-center justify-between">
+                                            <div>
+                                                <h3 className="text-sm font-semibold">{faq.title}</h3>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {faq.generated_faqs.length} questions • Created{' '}
+                                                    {formatDistance(new Date(faq.created_at), new Date(), {
+                                                        addSuffix: true,
+                                                    })}
+                                                </p>
+                                            </div>
+                                            <Button variant="ghost" size="sm" asChild>
+                                                <Link href={`/faq/${faq.id}`}>
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </ScrollArea>
+                        <Button variant="outline" className="w-full mt-6" asChild>
+                            <Link href="/faqs">View All FAQs</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Charts - Right Column */}
+                <div className="space-y-4">
+                    {/* Pie Chart */}
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle>FAQ Categories</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ResponsiveContainer width="100%" height={200}>
+                                <PieChart>
+                                    <Pie
+                                        data={stats?.tones}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        outerRadius={80}
                                         fill="#8884d8"
-                                        radius={[4, 4, 0, 0]}
-                                        maxBarSize={50}
-                                    />
-                                </BarChart>
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-muted-foreground">
-                                    No data available
-                                </div>
-                            )}
-                        </ResponsiveContainer>
-                        {/* Debug data
-                        <pre className="text-xs mt-4 text-muted-foreground">
-                            {JSON.stringify(stats?.daily_trends, null, 2)}
-                        </pre> */}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>FAQ Tones</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie
-                                    data={stats?.tones}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                    label={({ tone, percent }) =>
-                                        `${tone} ${(percent * 100).toFixed(0)}%`
-                                    }
-                                >
-                                    {stats?.tones.map((entry, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={COLORS[index % COLORS.length]}
+                                        dataKey="value"
+                                        label={({ tone, percent }) =>
+                                            `${tone} ${(percent * 100).toFixed(0)}%`
+                                        }
+                                    >
+                                        {stats?.tones.map((entry, index) => (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={COLORS[index % COLORS.length]}
+                                            />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+
+                    {/* Bar Chart */}
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle>FAQ Creation Over Time</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ResponsiveContainer width="100%" height={200}>
+                                {stats?.daily_trends && stats.daily_trends.length > 0 ? (
+                                    <BarChart
+                                        data={stats.daily_trends}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                    >
+                                        <XAxis
+                                            dataKey="day"
+                                            tick={{ fontSize: 12 }}
                                         />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+                                        <YAxis
+                                            allowDecimals={false}
+                                            tick={{ fontSize: 12 }}
+                                            domain={[0, 'dataMax + 1']}
+                                        />
+                                        <Tooltip />
+                                        <Bar
+                                            dataKey="count"
+                                            fill="#8884d8"
+                                            radius={[4, 4, 0, 0]}
+                                            maxBarSize={50}
+                                        />
+                                    </BarChart>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                                        No data available
+                                    </div>
+                                )}
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+
+                </div>
             </div>
 
-            <Card className="mb-8">
-                <CardHeader>
-                    <CardTitle>Recent FAQs</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ScrollArea className="h-[400px]">
-                        <div className="space-y-6">
-                            {isFetchingFaqs ? (
-                                <div className="flex items-center justify-center h-[300px]">
-                                    <div className="animate-spin">Loading...</div>
-                                </div>
-                                // ) : error ? (
-                                //     <div className="text-destructive text-center">{error}</div>
-                            ) : faqs.length === 0 ? (
-                                <div className="text-muted-foreground text-center">
-                                    No FAQs created yet
-                                </div>
-                            ) : (
-                                faqs.map((faq) => (
-                                    <div key={faq.id} className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="text-sm font-semibold">{faq.title}</h3>
-                                            <p className="text-xs text-muted-foreground">
-                                                {faq.generated_faqs.length} questions • Created{' '}
-                                                {formatDistance(new Date(faq.created_at), new Date(), {
-                                                    addSuffix: true,
-                                                })}
-                                            </p>
-                                        </div>
-                                        <Button variant="ghost" size="sm" asChild>
-                                            <Link href={`/faq/${faq.id}`}>
-                                                <ArrowRight className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </ScrollArea>
-                    <Button variant="outline" className="w-full mt-6" asChild>
-                        <Link href="/faqs">View All FAQs</Link>
-                    </Button>
-                </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-4">
                 <Button asChild>
                     <Link href="/faq/new">
                         <Plus className="mr-2 h-4 w-4" /> Create New FAQ
