@@ -53,6 +53,7 @@ export type FAQ = {
     user: number;
     title: string;
     content: string;
+    tone?: string;
     generated_faqs: QuestionAnswer[];
     number_of_faqs: number;
     created_at: string;

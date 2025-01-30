@@ -13,7 +13,7 @@ import { useStatistics } from '@/hooks/useStatistics'
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
 
 export default function Dashboard() {
-    const { faqs, isFetchingFaqs } = useFAQs()
+    const { faqs, isLoading, error } = useFAQs()
     const { data: stats, isLoading: isLoadingStats } = useStatistics()
 
     return (
@@ -87,18 +87,19 @@ export default function Dashboard() {
                     <CardContent>
                         <ScrollArea className="h-[400px]">
                             <div className="space-y-6">
-                                {isFetchingFaqs ? (
+                                {isLoading ? (
                                     <div className="flex items-center justify-center h-[300px]">
                                         <div className="animate-spin">Loading...</div>
                                     </div>
-                                    // ) : error ? (
-                                    //     <div className="text-destructive text-center">{error}</div>
-                                ) : faqs.length === 0 ? (
+                                ) : error ? (
+                                    <div className="text-destructive text-center">{error}</div>
+
+                                ) : (faqs && faqs.count === 0) ? (
                                     <div className="text-muted-foreground text-center">
                                         No FAQs created yet
                                     </div>
                                 ) : (
-                                    faqs.map((faq) => (
+                                    faqs && faqs.results.map((faq) => (
                                         <div key={faq.id} className="flex items-center justify-between">
                                             <div>
                                                 <h3 className="text-sm font-semibold">{faq.title}</h3>

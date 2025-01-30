@@ -20,7 +20,9 @@ export default function Header() {
                 <nav className="hidden md:flex space-x-4 items-center">
                     {session ? (
                         <>
-
+                            <Link href="/faqs" className="text-sm font-medium hover:text-primary">
+                                My FAQs
+                            </Link>
                             <span className="text-sm font-medium">Welcome, {session.user?.email}</span>
                             <Button onClick={() => signOut()} variant="ghost">Sign Out</Button>
                         </>
@@ -58,24 +60,29 @@ export default function Header() {
                     {isMobileMenuOpen && (
                         <nav className="absolute top-full left-0 right-0 bg-background border-b border-border/40 py-4 md:hidden">
                             <div className="flex flex-col space-y-4 items-center">
-                                <Link href="#how-it-works" className="text-sm font-medium hover:text-primary">
-                                    How It Works
-                                </Link>
-                                <Link href="#features" className="text-sm font-medium hover:text-primary">
-                                    Features
-                                </Link>
-                                <Link href="#pricing" className="text-sm font-medium hover:text-primary">
-                                    Pricing
-                                </Link>
                                 {session ? (
                                     <>
+                                        <Link href="/faqs" className="text-sm font-medium hover:text-primary">
+                                            My FAQs
+                                        </Link>
                                         <span className="text-sm font-medium">Welcome, {session.user?.name}</span>
                                         <Button onClick={() => signOut()} variant="ghost" className="w-full">Sign Out</Button>
                                     </>
                                 ) : (
-                                    <Button asChild className="w-full">
-                                        <Link href="/auth">Sign In</Link>
-                                    </Button>
+                                    <>
+                                        <Link href="#how-it-works" className="text-sm font-medium hover:text-primary">
+                                            How It Works
+                                        </Link>
+                                        <Link href="#features" className="text-sm font-medium hover:text-primary">
+                                            Features
+                                        </Link>
+                                        <Link href="#pricing" className="text-sm font-medium hover:text-primary">
+                                            Pricing
+                                        </Link>
+                                        <Button asChild className="w-full">
+                                            <Link href="/auth">Sign In</Link>
+                                        </Button>
+                                    </>
                                 )}
                             </div>
                         </nav>

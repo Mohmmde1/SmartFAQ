@@ -22,7 +22,7 @@ class FAQSerializer(serializers.ModelSerializer):
     )
     number_of_faqs = serializers.IntegerField(
         min_value=1,
-        max_value=10,
+        max_value=20,
         default=5
     )
     tone = serializers.ChoiceField(

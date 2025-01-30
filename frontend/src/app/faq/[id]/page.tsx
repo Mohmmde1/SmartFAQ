@@ -87,7 +87,7 @@ export default function SmartFAQ() {
                             setIsLoading(false);
                             // Update URL if it's a new FAQ
                             if (id === 'new' && data.faq.id) {
-                                router.replace(`/dashboard/faq/${data.faq.id}`);
+                                router.replace(`/faq/${data.faq.id}`);
                             }
                         }
                         break;
