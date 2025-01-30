@@ -161,6 +161,7 @@ export default function SmartFAQ() {
                 />
                 <GeneratedFAQs
                     faqs={messages}
+                    isLoading={isLoading}
                 />
             </div>
         </div>
