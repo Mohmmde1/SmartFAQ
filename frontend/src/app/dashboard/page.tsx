@@ -18,8 +18,17 @@ export default function Dashboard() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+            <div className="flex justify-between items-center mb-6">
 
+                <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+                <div className="flex justify-end">
+                    <Button asChild>
+                        <Link href="/faq/new">
+                            <Plus className="mr-2 h-4 w-4" /> Create New FAQ
+                        </Link>
+                    </Button>
+                </div>
+            </div>
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
                 <Card>
@@ -131,7 +140,7 @@ export default function Dashboard() {
                     {/* Pie Chart */}
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardTitle>FAQ Categories</CardTitle>
+                            <CardTitle>FAQ Tones</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ResponsiveContainer width="100%" height={200}>
@@ -202,13 +211,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div className="flex justify-end pt-4">
-                <Button asChild>
-                    <Link href="/faq/new">
-                        <Plus className="mr-2 h-4 w-4" /> Create New FAQ
-                    </Link>
-                </Button>
-            </div>
         </div>
     )
 }
