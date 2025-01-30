@@ -4,79 +4,33 @@ import { FAQ, PaginatedResponse } from '@/types/api'
 import { AppError } from '@/lib/errors'
 import { toast } from 'sonner'
 import { faqService } from '@/services/faqService'
+import { useQuery } from '@tanstack/react-query'
 
-export function useFAQs() {
-    const [faqs, setFaqs] = useState<FAQ[]>([])
-    const [isFetchingFaqs, setIsFetchingFaqs] = useState(true)
-    const [page, setPage] = useState(1)
-    const [hasMore, setHasMore] = useState(true)
-    const { ref, inView } = useInView()
+interface UseFAQsParams {
+    page?: number
+    pageSize?: number
+    search?: string
+    ordering?: string
+}
 
-    const fetchFAQs = async (pageNumber: number) => {
-        try {
-            const data = await faqService.getFAQPage(pageNumber)
-
-            // Add null check and ensure results is an array
-            if (!data || !Array.isArray(data.results)) {
-                setHasMore(false)
-                return
-            }
-
-            // Check for next page
-            setHasMore(!!data.next)
-
-            // Update FAQs safely
-            setFaqs(prev => pageNumber === 1 ?
-                data.results :
-                [...prev, ...(data.results || [])]
-            )
-            setPage(pageNumber)
-
-        } catch (error) {
-            if (error instanceof AppError) {
-                toast.error(error.message)
-            } else {
-                toast.error('Failed to fetch FAQs')
-            }
-        } finally {
-            setIsFetchingFaqs(false)
-        }
-    }
-
-    const refreshFAQs = useCallback(async () => {
-        setIsFetchingFaqs(true)
-        setPage(1)
-        try {
-            const data = await faqService.getFAQPage(1)
-            setFaqs(data.results)
-            setHasMore(!!data.next)
-        } catch (error) {
-            if (error instanceof AppError) {
-                toast.error(error.message)
-            } else {
-                toast.error('Failed to fetch FAQs')
-            }
-        } finally {
-            setIsFetchingFaqs(false)
-        }
-    }, [])
-
-    useEffect(() => {
-        fetchFAQs(1)
-    }, [])
-
-    useEffect(() => {
-        if (inView && hasMore && !isFetchingFaqs) {
-            fetchFAQs(page + 1)
-        }
-    }, [inView, hasMore, isFetchingFaqs])
+export function useFAQs({
+    page = 1,
+    pageSize = 10,
+    search = '',
+    ordering
+}: UseFAQsParams = {}) {
+    const { data, isLoading, error } = useQuery<PaginatedResponse<FAQ>>({
+        queryKey: ['faqs', page, pageSize, search, ordering],
+        queryFn: () => faqService.getFAQPage(page, {
+            page_size: pageSize,
+            search,
+            ordering
+        }),
+    })
 
     return {
-        faqs,
-        setFaqs,
-        isFetchingFaqs,
-        hasMore,
-        ref,
-        refreshFAQs
+        faqs: data,
+        isLoading,
+        error: error instanceof Error ? error.message : null
     }
 }

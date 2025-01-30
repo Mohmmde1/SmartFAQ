@@ -7,12 +7,14 @@ import { Slider } from "../ui/slider";
 type FAQOptionsProps = {
     numQuestions: number;
     tone: string;
+    disabled?: boolean;
+    update?: boolean;
     onQuestionsChange: (value: number) => void;
     onToneChange: (value: string) => void;
     onGenerate: () => void;
 }
 
-export function FAQOptions({ numQuestions, tone, onQuestionsChange, onToneChange, onGenerate }: FAQOptionsProps) {
+export function FAQOptions({ numQuestions, tone, disabled = false, onQuestionsChange, onToneChange, onGenerate, update = true }: FAQOptionsProps) {
     return (
         <Card>
             <CardHeader>
@@ -28,12 +30,13 @@ export function FAQOptions({ numQuestions, tone, onQuestionsChange, onToneChange
                         step={1}
                         value={[numQuestions]}
                         onValueChange={(value) => onQuestionsChange(value[0])}
+                        disabled={disabled}
                     />
                     <div className="text-sm text-muted-foreground">{numQuestions} questions</div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="tone">Tone</Label>
-                    <Select value={tone} onValueChange={onToneChange}>
+                    <Select disabled={disabled} value={tone} onValueChange={onToneChange}>
                         <SelectTrigger id="tone">
                             <SelectValue placeholder="Select tone" />
                         </SelectTrigger>
@@ -44,8 +47,8 @@ export function FAQOptions({ numQuestions, tone, onQuestionsChange, onToneChange
                         </SelectContent>
                     </Select>
                 </div>
-                <Button onClick={onGenerate} className="w-full">
-                    Update FAQs
+                <Button onClick={onGenerate} disabled={disabled} className="w-full">
+                    {update ? 'Update FAQ' : 'Generate FAQ'}
                 </Button>
             </CardContent>
         </Card>

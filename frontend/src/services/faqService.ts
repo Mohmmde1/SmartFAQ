@@ -1,5 +1,11 @@
 import { AppError } from '@/lib/errors'
-import { FAQ, PaginatedResponse } from '@/types/api'
+import { FAQ, FAQStatistics, PaginatedResponse } from '@/types/api'
+
+interface FAQQueryParams {
+    page_size?: number;
+    search?: string;
+    ordering?: string;
+}
 
 export const faqService = {
     async generate(data: { content: string; number_of_faqs: number, tone: string }) {
@@ -20,19 +26,27 @@ export const faqService = {
         return result
     },
 
-    async getFAQPage(pageNumber: number): Promise<PaginatedResponse<FAQ>> {
-        const response = await fetch(`/api/faq?page=${pageNumber}`)
-        const result = await response.json()
+    async getFAQPage(pageNumber: number, params: FAQQueryParams = {}): Promise<PaginatedResponse<FAQ>> {
+        const searchParams = new URLSearchParams({
+            page: pageNumber.toString(),
+            ...(params.page_size && { page_size: params.page_size.toString() }),
+            ...(params.search && { search: params.search }),
+            ...(params.ordering && { ordering: params.ordering })
+        });
+
+        const response = await fetch(`/api/faq?${searchParams.toString()}`);
+        const result = await response.json();
 
         if (!response.ok) {
             throw new AppError(
                 result.error.message,
                 result.error.code,
                 result.error.details
-            )
+            );
         }
-        return result
+        return result;
     },
+
     async update(faqContent: string | null, number_of_faqs: number | null, tone: string | null, id: string) {
 
         const response = await fetch(`/api/faq/${id}`, {
@@ -72,5 +86,20 @@ export const faqService = {
             )
         }
         return result.results;
+    },
+
+    async getStatistics(): Promise<FAQStatistics> {
+        const response = await fetch("/api/faq/statistics")
+        const result = await response.json()
+
+        if (!response.ok) {
+            throw new AppError(
+                result.error.message,
+                result.error.code,
+                result.error.details
+            )
+        }
+
+        return result
     }
 }
