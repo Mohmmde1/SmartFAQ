@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 
 from .async_faq_generator import FAQGenerator
 from .models import FAQ, QuestionAnswer
+from .serializers import FAQSerializer, QuestionAnswerSerializer
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -48,6 +49,16 @@ class FAQManager:
         faq.generated_faqs.add(qa)
 
 class FAQConsumer(AsyncWebsocketConsumer):
+    @sync_to_async
+    def serialize_question_answer(self, qa: QuestionAnswer) -> dict:
+        serializer = QuestionAnswerSerializer(qa)
+        return serializer.data
+
+    @sync_to_async
+    def serialize_faq(self, faq: FAQ) -> dict:
+        serializer = FAQSerializer(faq)
+        return serializer.data
+
     async def connect(self):
         logger.info(f"New WebSocket connection: {self.channel_name}")
         try:
@@ -84,56 +95,56 @@ class FAQConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data: str) -> None:
         try:
             data = json.loads(text_data)
-            text = data.get("text")
-            num_questions = data.get("num_questions", 5)
-            tone = data.get("tone", "neutral")
-            faq_id = data.get("faq_id")
 
-            if not text:
-                await self.send_error("Input text cannot be empty")
+            # Validate input using serializer
+            serializer = FAQSerializer(data={
+                'content': data.get('text', ''),
+                'number_of_faqs': data.get('num_questions', 5),
+                'tone': data.get('tone', 'neutral')
+            })
+
+            if not serializer.is_valid():
+                await self.send_error(str(serializer.errors))
                 return
 
-            self.faq = await self.faq_manager.get_or_create_faq(faq_id)
-            if faq_id:
+            validated_data = serializer.validated_data
+            self.faq = await self.faq_manager.get_or_create_faq(data.get('faq_id'))
+
+            if data.get('faq_id'):
                 await self.faq_manager.clear_existing_faqs(self.faq)
 
             await self.faq_manager.update_faq(
-                self.faq, text, num_questions, tone
+                self.faq,
+                validated_data['content'],
+                validated_data['number_of_faqs'],
+                validated_data['tone']
             )
-            await self.handle_faq_generation(text, num_questions, tone)
+
+            await self.handle_faq_generation(
+                validated_data['content'],
+                validated_data['number_of_faqs'],
+                validated_data['tone']
+            )
 
         except Exception as e:
             logger.error(f"Error in receive: {str(e)}", exc_info=True)
             await self.send_error(str(e))
 
     async def send_faq_update(self, faq: QuestionAnswer) -> None:
+        serialized_data = await self.serialize_question_answer(faq)
         await self.send(json.dumps({
             "type": "faq",
             "faqId": self.faq.id,
-            "id": faq.id,
-            "question": faq.question,
-            "answer": faq.answer,
+            **serialized_data,
             "status": "generating"
         }))
 
     async def send_completion_message(self, generated_faqs: List[QuestionAnswer]) -> None:
+        serialized_data = await self.serialize_faq(self.faq)
         await self.send(json.dumps({
             "type": "status",
             "status": "complete",
-            "faq": {
-                "id": self.faq.id,
-                "title": self.faq.title,
-                "content": self.faq.content,
-                "generated_faqs": [{
-                    "id": qa.id,
-                    "question": qa.question,
-                    "answer": qa.answer
-                } for qa in generated_faqs],
-                "number_of_faqs": self.faq.number_of_faqs,
-                "tone": self.faq.tone,
-                "created_at": self.faq.created_at.isoformat(),
-                "updated_at": self.faq.updated_at.isoformat()
-            }
+            "faq": serialized_data
         }))
 
     async def send_error(self, message: str) -> None:

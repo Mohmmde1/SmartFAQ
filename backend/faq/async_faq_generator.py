@@ -70,7 +70,6 @@ class FAQGenerator:
             pattern = r'\{\s*"question"\s*:\s*"(.*?)",\s*"answer"\s*:\s*"(.*?)"\s*\}'
             async for chunk in stream:
                 if 'message' in chunk and 'content' in chunk['message']:
-                    logger.debug(f"Received chunk size: {len(chunk['message']['content'])}")
                     buffer += chunk['message']['content']
                     match = re.search(pattern, buffer)
                     if match:

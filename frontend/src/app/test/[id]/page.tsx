@@ -55,7 +55,7 @@ export default function SmartFAQ() {
                 setIsLoading(false)
             }
         }
-        if (id) {
+        if (id && id !== 'new') {
             fetchFaq()
         }
         if (!socket) return;
@@ -120,7 +120,7 @@ export default function SmartFAQ() {
             text: inputText,
             num_questions: numQuestions,
             tone: tone,
-            faq_id: id
+            faq_id: id === 'new' ? undefined : id
         });
 
         if (!success) {
