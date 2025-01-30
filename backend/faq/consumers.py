@@ -39,6 +39,11 @@ class FAQManager:
 
     @sync_to_async
     def update_faq(self, faq: FAQ, content: str, num_questions: int, tone: str) -> None:
+        # Generate title from first 25 chars of content
+        title = content[:25].strip()
+        if len(content) > 25:
+            title = title.rsplit(' ', 1)[0] + '...'
+        faq.title = title
         faq.content = content
         faq.number_of_faqs = num_questions
         faq.tone = tone

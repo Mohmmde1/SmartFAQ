@@ -40,6 +40,9 @@ export default function Dashboard() {
                         <div className="text-2xl font-bold">
                             {isLoadingStats ? "..." : stats?.total_faqs}
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                            This is the total number of FAQs created
+                        </p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -51,6 +54,9 @@ export default function Dashboard() {
                         <div className="text-2xl font-bold">
                             {isLoadingStats ? "..." : stats?.total_questions}
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                            This is the total number of questions across all FAQs
+                        </p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -62,6 +68,9 @@ export default function Dashboard() {
                         <div className="text-2xl font-bold">
                             {isLoadingStats ? "..." : stats?.avg_questions_per_faq}
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                            This is the average number of questions per FAQ
+                        </p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -153,6 +162,7 @@ export default function Dashboard() {
                                         outerRadius={80}
                                         fill="#8884d8"
                                         dataKey="value"
+                                        stroke="none"
                                         label={({ tone, percent }) =>
                                             `${tone} ${(percent * 100).toFixed(0)}%`
                                         }
