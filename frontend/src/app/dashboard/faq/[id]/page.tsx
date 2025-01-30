@@ -1,27 +1,33 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { AppError } from '@/lib/errors'
-import { FAQ } from '@/types/api'
-import { toast } from "sonner"
-import { LoadingSkeleton } from '@/components/faq/loading-skeleton'
-import { FAQInput } from '@/components/faq/faq-input'
-import { FAQOptions } from '@/components/faq/faq-options'
-import { GeneratedFAQs } from '@/components/faq/generated-faqs'
-import { faqService } from '@/services/faqService'
+import { useState, useEffect, useCallback } from 'react';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { useRouter } from 'next/navigation';
 
-export default function FAQGenerationPage() {
+import { toast } from 'sonner';
+import { GeneratedFAQs } from '@/components/faq/generated-faqs';
+import { FAQ, QuestionAnswer } from '@/types/api';
+import { WebSocketMessage } from '@/types/websocket';
+import { FAQInput } from '@/components/faq/faq-input';
+import { FAQOptions } from '@/components/faq/faq-options';
+import { useParams } from 'next/navigation';
+import { AppError } from '@/lib/errors';
+
+
+export default function SmartFAQ() {
     const params = useParams()
     const { id } = params
-    if (typeof id !== 'string') {
-        throw new Error("Can't access id")
-    }
-    const [faq, setFaq] = useState<FAQ | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const [faqContent, setFaqContent] = useState('')
-    const [numQuestions, setNumQuestions] = useState(5)
-    const [tone, setTone] = useState("neutral")
+    const router = useRouter();
+
+    const [faq, setFaq] = useState<Partial<FAQ> | null>(null);
+    const [messages, setMessages] = useState<QuestionAnswer[]>([]);
+    const [inputText, setInputText] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [numQuestions, setNumQuestions] = useState(5);
+    const [tone, setTone] = useState("neutral");
+    const [error, setError] = useState<string | null>(null);
+
+    const { socket, isConnected, sendMessage } = useWebSocket();
 
     useEffect(() => {
         const fetchFaq = async () => {
@@ -37,7 +43,10 @@ export default function FAQGenerationPage() {
                     )
                 }
                 setFaq(data)
-                setFaqContent(data.content)
+                setInputText(data.content)
+                setMessages(data.generated_faqs || [])
+                setTone(data.tone || "neutral")
+                setNumQuestions(data.number_of_faqs || 5)
             } catch (error) {
                 if (error instanceof AppError) {
                     toast.error(error.message)
@@ -48,60 +57,112 @@ export default function FAQGenerationPage() {
                 setIsLoading(false)
             }
         }
-
-        fetchFaq()
-    }, [id])
-
-    const handleGenerateFAQs = async () => {
-        setIsLoading(true)
-        try {
-            const result = await faqService.update(
-
-                faqContent,
-                numQuestions,
-                tone, id
-
-            )
-
-            setFaq(result)
-            toast.success('FAQs generated successfully!')
-        } catch (error) {
-            if (error instanceof AppError) {
-                toast.error(error.message)
-            } else {
-                toast.error('Failed to generate FAQs')
-            }
-        } finally {
-            setIsLoading(false)
+        if (id && id !== 'new') {
+            fetchFaq()
         }
-    }
+        if (!socket) return;
 
-    if (isLoading) {
-        return <LoadingSkeleton />
-    }
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data) as WebSocketMessage;
+
+                switch (data.type) {
+                    case 'faq':
+                        if (data.question && data.answer && data.id) {
+                            setMessages(prev => {
+                                return [...prev,
+                                {
+                                    id: parseInt(data.id!),
+                                    question: data.question || "",
+                                    answer: data.answer || ""
+                                }]
+
+                            });
+                        }
+                        break;
+
+                    case 'status':
+                        if (data.status === 'complete' && data.faq) {
+                            setFaq(data.faq);
+                            setIsLoading(false);
+                            // Update URL if it's a new FAQ
+                            if (id === 'new' && data.faq.id) {
+                                router.replace(`/dashboard/faq/${data.faq.id}`);
+                            }
+                        }
+                        break;
+
+                    case 'error':
+                        setError(data.message || 'An error occurred');
+                        setIsLoading(false);
+                        toast.error(data.message);
+                        break;
+                }
+            } catch (error) {
+                console.error('Failed to parse message:', error);
+                toast.error('Failed to process server response');
+            }
+        };
+    }, [socket, id, router]);
+
+    const handleGenerate = useCallback(() => {
+        if (!inputText.trim()) {
+            toast.error('Please enter some text');
+            return;
+        }
+
+        if (!isConnected) {
+            toast.error('Not connected to server');
+            return;
+        }
+
+        setError(null);
+        setIsLoading(true);
+        setFaq(null);
+        setMessages([]);
+
+        const success = sendMessage({
+            type: 'generate',
+            text: inputText,
+            num_questions: numQuestions,
+            tone: tone,
+            faq_id: id === 'new' ? undefined : id
+        });
+
+        if (!success) {
+            setIsLoading(false);
+            toast.error('Failed to send message');
+        }
+    }, [inputText, numQuestions, tone, isConnected, sendMessage]);
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">FAQ Generation: {faq?.title}</h1>
+            <h1 className="text-3xl font-bold mb-8">
+                FAQ Generation {faq?.title && `- ${faq.title}`}
+            </h1>
+            <h2>
+                {isConnected ? <span className="text-green-500">Connected</span> : <span className="text-red-500">Disconnected</span>}
+            </h2>
 
             <div className="grid gap-8 md:grid-cols-2">
                 <FAQInput
-                    content={faqContent}
-                    onChange={setFaqContent}
+                    content={inputText}
+                    onChange={setInputText}
+                    disabled={isLoading}
                 />
                 <FAQOptions
                     numQuestions={numQuestions}
                     tone={tone}
+                    disabled={isLoading}
+                    update={id !== 'new'}
                     onQuestionsChange={setNumQuestions}
                     onToneChange={setTone}
-                    onGenerate={handleGenerateFAQs}
+                    onGenerate={handleGenerate}
                 />
-                {faq && (
-                    <GeneratedFAQs
-                        faqs={faq.generated_faqs}
-                    />
-                )}
+                <GeneratedFAQs
+                    faqs={messages}
+                />
             </div>
         </div>
-    )
+    );
 }
