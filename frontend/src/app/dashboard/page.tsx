@@ -8,39 +8,13 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useFAQs } from "@/hooks/useFAQs"
 import { formatDistance } from "date-fns"
-
-// Mock data for recent FAQs
-const recentFaqs = [
-    { id: 1, title: "Company Policy FAQ", questionsCount: 15, createdAt: "2023-06-01" },
-    { id: 2, title: "Product Features FAQ", questionsCount: 12, createdAt: "2023-05-28" },
-    { id: 3, title: "Customer Support FAQ", questionsCount: 20, createdAt: "2023-05-25" },
-    { id: 4, title: "Shipping and Returns FAQ", questionsCount: 10, createdAt: "2023-05-22" },
-    { id: 5, title: "Technical Specifications FAQ", questionsCount: 18, createdAt: "2023-05-20" },
-]
-
-// Mock data for FAQ creation over time
-const faqCreationData = [
-    { month: "Jan", count: 4 },
-    { month: "Feb", count: 3 },
-    { month: "Mar", count: 5 },
-    { month: "Apr", count: 7 },
-    { month: "May", count: 6 },
-    { month: "Jun", count: 8 },
-]
-
-// Mock data for FAQ categories
-const faqCategoriesData = [
-    { name: "Product", value: 35 },
-    { name: "Support", value: 25 },
-    { name: "Shipping", value: 15 },
-    { name: "Billing", value: 10 },
-    { name: "Other", value: 15 },
-]
+import { useStatistics } from '@/hooks/useStatistics'
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
 
 export default function Dashboard() {
     const { faqs, isFetchingFaqs } = useFAQs()
+    const { data: stats, isLoading: isLoadingStats } = useStatistics()
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -53,8 +27,9 @@ export default function Dashboard() {
                         <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">25</div>
-                        <p className="text-xs text-muted-foreground">+2 from last month</p>
+                        <div className="text-2xl font-bold">
+                            {isLoadingStats ? "..." : stats?.total_faqs}
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -63,8 +38,9 @@ export default function Dashboard() {
                         <BarChartIcon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">345</div>
-                        <p className="text-xs text-muted-foreground">+24 from last month</p>
+                        <div className="text-2xl font-bold">
+                            {isLoadingStats ? "..." : stats?.total_questions}
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -73,8 +49,9 @@ export default function Dashboard() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">13.8</div>
-                        <p className="text-xs text-muted-foreground">+0.3 from last month</p>
+                        <div className="text-2xl font-bold">
+                            {isLoadingStats ? "..." : stats?.avg_questions_per_faq}
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -83,8 +60,18 @@ export default function Dashboard() {
                         <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">2 days ago</div>
-                        <p className="text-xs text-muted-foreground">Company Policy FAQ</p>
+                        {stats?.last_faq_created && (
+                            <>
+                                <div className="text-2xl font-bold">
+                                    {formatDistance(new Date(stats.last_faq_created.created_at), new Date(), {
+                                        addSuffix: true,
+                                    })}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {stats.last_faq_created.title}
+                                </p>
+                            </>
+                        )}
                     </CardContent>
                 </Card>
             </div>
@@ -92,38 +79,68 @@ export default function Dashboard() {
             <div className="grid gap-8 md:grid-cols-2 mb-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>FAQ Creation Over Time</CardTitle>
+                        <CardTitle>FAQ Creation Over Time (Daily Trend)</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={faqCreationData}>
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                <Tooltip />
-                                <Bar dataKey="count" fill="#8884d8" />
-                            </BarChart>
+                            {stats?.daily_trends && stats.daily_trends.length > 0 ? (
+                                <BarChart
+                                    data={stats.daily_trends}
+                                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                >
+                                    <XAxis
+                                        dataKey="day"
+                                        tick={{ fontSize: 12 }}
+                                    />
+                                    <YAxis
+                                        allowDecimals={false}
+                                        tick={{ fontSize: 12 }}
+                                        domain={[0, 'dataMax + 1']}
+                                    />
+                                    <Tooltip />
+                                    <Bar
+                                        dataKey="count"
+                                        fill="#8884d8"
+                                        radius={[4, 4, 0, 0]}
+                                        maxBarSize={50}
+                                    />
+                                </BarChart>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-muted-foreground">
+                                    No data available
+                                </div>
+                            )}
                         </ResponsiveContainer>
+                        {/* Debug data
+                        <pre className="text-xs mt-4 text-muted-foreground">
+                            {JSON.stringify(stats?.daily_trends, null, 2)}
+                        </pre> */}
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader>
-                        <CardTitle>FAQ Categories</CardTitle>
+                        <CardTitle>FAQ Tones</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
-                                    data={faqCategoriesData}
+                                    data={stats?.tones}
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
                                     outerRadius={80}
                                     fill="#8884d8"
                                     dataKey="value"
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    label={({ tone, percent }) =>
+                                        `${tone} ${(percent * 100).toFixed(0)}%`
+                                    }
                                 >
-                                    {faqCategoriesData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    {stats?.tones.map((entry, index) => (
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={COLORS[index % COLORS.length]}
+                                        />
                                     ))}
                                 </Pie>
                                 <Tooltip />

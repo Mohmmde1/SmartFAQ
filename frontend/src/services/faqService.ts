@@ -1,5 +1,5 @@
 import { AppError } from '@/lib/errors'
-import { FAQ, PaginatedResponse } from '@/types/api'
+import { FAQ, FAQStatistics, PaginatedResponse } from '@/types/api'
 
 export const faqService = {
     async generate(data: { content: string; number_of_faqs: number, tone: string }) {
@@ -72,5 +72,20 @@ export const faqService = {
             )
         }
         return result.results;
+    },
+
+    async getStatistics(): Promise<FAQStatistics> {
+        const response = await fetch("/api/faq/statistics")
+        const result = await response.json()
+
+        if (!response.ok) {
+            throw new AppError(
+                result.error.message,
+                result.error.code,
+                result.error.details
+            )
+        }
+
+        return result
     }
 }

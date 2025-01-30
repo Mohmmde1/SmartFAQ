@@ -57,3 +57,20 @@ class FAQSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at'
         ]
+
+
+class DailyTrendSerializer(serializers.Serializer):
+    day = serializers.CharField()
+    count = serializers.IntegerField()
+
+class ToneSerializer(serializers.Serializer):
+    tone = serializers.CharField()
+    value = serializers.IntegerField()
+
+class FAQStatisticsSerializer(serializers.Serializer):
+    total_faqs = serializers.IntegerField()
+    total_questions = serializers.IntegerField()
+    avg_questions_per_faq = serializers.FloatField()
+    last_faq_created = FAQSerializer(read_only=True)
+    daily_trends = DailyTrendSerializer(many=True)
+    tones = ToneSerializer(many=True)

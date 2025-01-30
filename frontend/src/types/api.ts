@@ -77,3 +77,22 @@ export interface PaginatedResponse<T> {
     previous: string | null;
     results: T[];
 }
+
+export interface DailyTrend {
+    day: string;  // 'Mon', 'Tue', etc.
+    count: number;
+}
+
+export interface ToneStats {
+    tone: string;   // 'formal', 'casual', etc.
+    value: number;  // count of FAQs with this tone
+}
+
+export interface FAQStatistics {
+    total_faqs: number;
+    total_questions: number;
+    avg_questions_per_faq: number;
+    last_faq_created: FAQ | null;
+    daily_trends: DailyTrend[];
+    tones: ToneStats[];
+}

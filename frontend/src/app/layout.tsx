@@ -6,6 +6,7 @@ import '@/app/globals.css'
 import { Session } from 'inspector/promises'
 import SessionProviderWrapper from '@/components/session-provider-wrapper'
 import { Toaster } from 'sonner'
+import Providers from '@/components/providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,12 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SessionProviderWrapper>
-            <LayoutWrapper>{children}</LayoutWrapper>
-          </SessionProviderWrapper>
+        <Providers attribute="class" defaultTheme="system" enableSystem>
+          <LayoutWrapper>{children}</LayoutWrapper>
           <Toaster />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   )

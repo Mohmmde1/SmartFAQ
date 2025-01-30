@@ -30,6 +30,7 @@ class FAQ(ModelBase):
     generated_faqs = models.ManyToManyField(QuestionAnswer, blank=True)
     number_of_faqs = models.PositiveIntegerField(default=3)
     tone = models.CharField(choices=TONE_CHOICES, default='neutral')
+    category = models.CharField(max_length=255, default='General')
 
     def __str__(self):
         return self.title
