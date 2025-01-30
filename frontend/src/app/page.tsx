@@ -1,6 +1,6 @@
-import Hero from '@/components/landingPage/hero'
-import HowItWorks from '@/components/landingPage/how-it-works'
-import WhyChooseUs from '@/components/landingPage/why-choose-us'
+import Hero from '@/components/landing-page/hero'
+import HowItWorks from '@/components/landing-page/how-it-works'
+import WhyChooseUs from '@/components/landing-page/why-choose-us'
 
 export default function Home() {
   return (
