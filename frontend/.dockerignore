@@ -61,4 +61,4 @@ Dockerfile*
 .coverage
 coverage/
 .pytest_cache/
-test-results/ 
+test-results/

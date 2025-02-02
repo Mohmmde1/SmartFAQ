@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ faq.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">SmartFAQ</div>
+        <h1 class="title">{{ faq.title }}</h1>
+        <div class="metadata">
+            <div class="metadata-item">
+                <i class="ri-calendar-line"></i> Generated on {{ date }}
+            </div>
+            <div class="metadata-item">
+                <i class="ri-questionnaire-line"></i> {{ total_questions }} Questions
+            </div>
+        </div>
+    </div>
+
+    {% if faq.content %}
+    <div class="content">
+        <div class="content-header">Summary</div>
+        {{ faq.content }}
+    </div>
+    {% endif %}
+
+    <div class="faqs">
+        {% for qa in generated_faqs %}
+        <div class="faq-item" data-category="{{ qa.category|default:'General' }}">
+            <div class="question-wrapper">
+                <div class="question">
+                    <span class="question-icon">Q</span>
+                    <span class="question-text">{{ qa.question }}</span>
+                </div>
+                {% if qa.tags %}
+                <div class="tags">
+                    {% for tag in qa.tags %}
+                    <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="answer-wrapper">
+                <div class="answer">
+                    <span class="answer-icon">A</span>
+                    <div class="answer-content">
+                        {{ qa.answer }}
+                        {% if qa.highlights %}
+                        <div class="highlights">
+                            <div class="highlight-title">Key Points:</div>
+                            <ul>
+                            {% for highlight in qa.highlights %}
+                                <li>{{ highlight }}</li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">SmartFAQ</div>
+            <div class="footer-meta">
+                Generated on {{ date }} • Total Questions: {{ total_questions }}
+            </div>
+            <div class="footer-page">Page <span class="page-number"></span></div>
+        </div>
+    </div>
+</body>
+</html>

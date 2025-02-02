@@ -13,17 +13,14 @@ logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
+
 @database_sync_to_async
 def get_user(token_key: str) -> User:
     # Try JWT token first
     try:
-        payload = jwt.decode(
-            token_key,
-            settings.SECRET_KEY,
-            algorithms=[settings.SIMPLE_JWT['ALGORITHM']]
-        )
+        payload = jwt.decode(token_key, settings.SECRET_KEY, algorithms=[settings.SIMPLE_JWT["ALGORITHM"]])
 
-        user_id = payload.get('user_id')
+        user_id = payload.get("user_id")
         if user_id:
             return User.objects.get(id=user_id)
     except (jwt.InvalidTokenError, User.DoesNotExist):
@@ -38,17 +35,18 @@ def get_user(token_key: str) -> User:
 
     return AnonymousUser()
 
+
 class TokenAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
         try:
             # Parse query string properly
-            query_string = scope.get('query_string', b'').decode()
+            query_string = scope.get("query_string", b"").decode()
             query_params = parse_qs(query_string)
-            token_key = query_params.get('token', [None])[0]
+            token_key = query_params.get("token", [None])[0]
 
             # Set user in scope
-            scope['user'] = await get_user(token_key) if token_key else AnonymousUser()
+            scope["user"] = await get_user(token_key) if token_key else AnonymousUser()
         except Exception:
-            scope['user'] = AnonymousUser()
+            scope["user"] = AnonymousUser()
 
         return await super().__call__(scope, receive, send)

@@ -7,6 +7,7 @@ from faq.models import FAQ, QuestionAnswer
 
 User = get_user_model()
 
+
 class Command(BaseCommand):
     """
     Command to populate the database with sample FAQs and questions/answers.
@@ -38,11 +39,9 @@ class Command(BaseCommand):
             commit = options["commit"]
 
             # Create a sample user
-            user, created = User.objects.get_or_create(
-                email='sampleuser@example.com'
-            )
+            user, created = User.objects.get_or_create(email="sampleuser@example.com")
             if created:
-                user.set_password('password123')
+                user.set_password("password123")
                 user.save()
                 self.stdout.write(self.style.SUCCESS(f"Created sample user: {user.email}"))
 
@@ -91,9 +90,7 @@ class Command(BaseCommand):
                 )
             else:
                 transaction.savepoint_rollback(sid)
-                self.stdout.write(
-                    self.style.WARNING("Dry-run completed successfully. No changes committed.")
-                )
+                self.stdout.write(self.style.WARNING("Dry-run completed successfully. No changes committed."))
 
         except Exception as e:
             transaction.savepoint_rollback(sid)

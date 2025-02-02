@@ -12,12 +12,15 @@ from .models import QuestionAnswer
 
 logger = logging.getLogger(__name__)
 
+
 class QuestionAnswerSchema(BaseModel):
     question: str = Field(..., min_length=1)
     answer: str = Field(..., min_length=1)
 
+
 class FAQSchema(BaseModel):
     generated_faqs: List[QuestionAnswerSchema]
+
 
 @dataclass
 class FAQPrompt:
@@ -28,18 +31,14 @@ class FAQPrompt:
     Text: {text}
     """
 
+
 class FAQGenerator:
     def __init__(self, model_name: str = settings.OLLAMA_MODEL):
         self.model_name = model_name
         self.client = ollama.AsyncClient()
         logger.info(f"Initialized FAQGenerator with model: {model_name}")
 
-    async def generate_faqs_stream(
-        self,
-        text: str,
-        num_questions: int = 5,
-        tone: str = 'neutral'
-    ):
+    async def generate_faqs_stream(self, text: str, num_questions: int = 5, tone: str = "neutral"):
         logger.info(f"Starting FAQ generation: questions={num_questions}, tone={tone}")
 
         if not text.strip():
@@ -50,11 +49,7 @@ class FAQGenerator:
             logger.warning(f"Invalid number of questions: {num_questions}")
             raise ValueError("Number of questions must be positive")
 
-        content = FAQPrompt.TEMPLATE.format(
-            num_questions=num_questions,
-            tone=tone,
-            text=text
-        )
+        content = FAQPrompt.TEMPLATE.format(num_questions=num_questions, tone=tone, text=text)
         if len(content) > 4096:
             content = content[:4096]
         logger.debug(f"Generated prompt with length: {len(content)}")
@@ -65,20 +60,19 @@ class FAQGenerator:
                 model=self.model_name,
                 messages=[{"role": "user", "content": content}],
                 stream=True,
-                format=FAQSchema.model_json_schema()
+                format=FAQSchema.model_json_schema(),
             )
 
             buffer = ""
             pattern = r'\{\s*"question"\s*:\s*"(.*?)",\s*"answer"\s*:\s*"(.*?)"\s*\}'
             async for chunk in stream:
-                if 'message' in chunk and 'content' in chunk['message']:
-                    buffer += chunk['message']['content']
+                if "message" in chunk and "content" in chunk["message"]:
+                    buffer += chunk["message"]["content"]
                     match = re.search(pattern, buffer)
                     if match:
                         logger.info("Creating new QuestionsAnswer from matched content")
                         faq = await sync_to_async(QuestionAnswer.objects.create)(
-                            question=match.group(1),
-                            answer=match.group(2)
+                            question=match.group(1), answer=match.group(2)
                         )
                         logger.debug(f"Created QuestionsAnswer with id: {faq.id}")
                         buffer = ""

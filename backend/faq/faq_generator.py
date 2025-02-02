@@ -10,12 +10,15 @@ from .models import QuestionAnswer
 
 logger = logging.getLogger(__name__)
 
+
 class QuestionAnswerSchema(BaseModel):
     question: str = Field(..., min_length=1)
     answer: str = Field(..., min_length=1)
 
+
 class FAQ(BaseModel):
     generated_faqs: List[QuestionAnswerSchema]
+
 
 @dataclass
 class FAQPrompt:
@@ -28,17 +31,13 @@ class FAQPrompt:
     Text: {text}
     """
 
+
 class FAQGenerator:
     def __init__(self, model_name: str = settings.OLLAMA_MODEL):
         """Initialize FAQ Generator with specified model."""
         self.model_name = model_name
 
-    def generate_faqs(
-        self,
-        text: str,
-        num_questions: int = 5,
-        tone: str = 'neutral'
-    ) -> List[QuestionAnswer]:
+    def generate_faqs(self, text: str, num_questions: int = 5, tone: str = "neutral") -> List[QuestionAnswer]:
         """
         Generate FAQs from input text using Ollama.
 
@@ -62,25 +61,16 @@ class FAQGenerator:
         faqs: List[QuestionAnswer] = []
 
         try:
-            content = FAQPrompt.TEMPLATE.format(
-                num_questions=num_questions,
-                tone=tone,
-                text=text
-            )
+            content = FAQPrompt.TEMPLATE.format(num_questions=num_questions, tone=tone, text=text)
 
             response = ollama.chat(
-                model=self.model_name,
-                messages=[{"role": "user", "content": content}],
-                format=FAQ.model_json_schema()
+                model=self.model_name, messages=[{"role": "user", "content": content}], format=FAQ.model_json_schema()
             )
 
             question_answer = FAQ.model_validate_json(response.message.content)
 
             for faq in question_answer.generated_faqs:
-                qa = QuestionAnswer.objects.create(
-                    question=faq.question,
-                    answer=faq.answer
-                )
+                qa = QuestionAnswer.objects.create(question=faq.question, answer=faq.answer)
                 faqs.append(qa)
 
             return faqs

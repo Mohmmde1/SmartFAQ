@@ -101,5 +101,31 @@ export const faqService = {
         }
 
         return result
+    },
+
+    async downloadPDF(id: number): Promise<void> {
+        const response = await fetch(`/api/faq/${id}/download`, {
+            method: 'GET',
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new AppError(
+                error.message,
+                error.code,
+                error.details
+            );
+        }
+
+        // Create blob and download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `faq_${id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
     }
 }

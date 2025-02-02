@@ -21,12 +21,8 @@ class Command(BaseCommand):
         """
         Define the arguments required for the management command.
         """
-        parser.add_argument(
-            "--name", "-n", required=True, help="Project name for the SocialApp."
-        )
-        parser.add_argument(
-            "--client_id", "-ci", required=True, help="Client ID for the Google app."
-        )
+        parser.add_argument("--name", "-n", required=True, help="Project name for the SocialApp.")
+        parser.add_argument("--client_id", "-ci", required=True, help="Client ID for the Google app.")
         parser.add_argument(
             "--secret_key",
             "-sk",
@@ -67,36 +63,22 @@ class Command(BaseCommand):
             sa_obj.client_id = client_id
             sa_obj.secret = secret_key
             sa_obj.save()
-            self.stdout.write(
-                f"{'Created' if created else 'Updated'} SocialApp: {name}"
-            )
+            self.stdout.write(f"{'Created' if created else 'Updated'} SocialApp: {name}")
 
             # Step 3: Associate SocialApp with the first site
             site_obj = Site.objects.first()
             if not site_obj:
-                raise ValueError(
-                    "No sites found. Please create a Site object before running this command."
-                )
+                raise ValueError("No sites found. Please create a Site object before running this command.")
             sa_obj.sites.add(site_obj)
-            self.stdout.write(
-                f"Associated SocialApp '{name}' with Site: {site_obj.domain}"
-            )
+            self.stdout.write(f"Associated SocialApp '{name}' with Site: {site_obj.domain}")
 
             # Commit or rollback transaction based on --commit flag
             if commit:
                 transaction.savepoint_commit(sid)
-                self.stdout.write(
-                    self.style.SUCCESS(
-                        "Setup completed successfully with changes committed."
-                    )
-                )
+                self.stdout.write(self.style.SUCCESS("Setup completed successfully with changes committed."))
             else:
                 transaction.savepoint_rollback(sid)
-                self.stdout.write(
-                    self.style.WARNING(
-                        "Dry-run completed successfully. No changes committed."
-                    )
-                )
+                self.stdout.write(self.style.WARNING("Dry-run completed successfully. No changes committed."))
 
         except Exception as e:
             transaction.savepoint_rollback(sid)

@@ -17,6 +17,9 @@ import { scrapeService } from '@/services/scrapeService';
 import { pdfService } from '@/services/pdfService'
 import { FileUpload } from '@/components/faq/file-upload'
 import { SourceSelector } from '@/components/faq/source-selector';
+import { Download } from 'lucide-react'
+import { Button } from '@/components/ui/button';
+import { faqService } from '@/services/faqService';
 
 
 export default function SmartFAQ() {
@@ -191,11 +194,33 @@ export default function SmartFAQ() {
         }
     }
 
+    const handleDownload = async () => {
+        if (!faq?.id) return;
+
+        try {
+            await faqService.downloadPDF(faq.id);
+        } catch (error) {
+            if (error instanceof AppError) {
+                toast.error(error.message);
+            } else {
+                toast.error('Failed to download PDF');
+            }
+        }
+    };
+
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">
-                FAQ Generation {faq?.title && `- ${faq.title}`}
-            </h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold">
+                    FAQ Generation {faq?.title && `- ${faq.title}`}
+                </h1>
+                {faq?.id && (
+                    <Button onClick={handleDownload} variant="outline">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download PDF
+                    </Button>
+                )}
+            </div>
             <h2>
                 {isConnected ? <span className="text-green-500">Connected</span> : <span className="text-red-500">Disconnected</span>}
             </h2>
