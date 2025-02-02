@@ -4,12 +4,11 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
-from .base import *  # noqa: E402, F403
-
 # Load environment variables from .env.docker
 env_path = Path(__file__).resolve().parent.parent.parent / ".env.docker"
 load_dotenv(env_path)
 
+from .base import *  # noqa: E402, F403
 
 ###############################################################################
 # Database Settings
