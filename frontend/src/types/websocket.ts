@@ -2,7 +2,7 @@ import { FAQ } from "./api";
 
 export interface WebSocketMessage {
     type: 'faq' | 'status' | 'error';
-    status?: 'generating' | 'complete';
+    status?: 'generating' | 'complete' | 'stopped';
     question?: string;
     answer?: string;
     id?: string;

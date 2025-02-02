@@ -83,10 +83,13 @@ class FAQConsumer(AsyncWebsocketConsumer):
 
     async def handle_faq_generation(self, text: str, num_questions: int, tone: str) -> None:
         try:
-            generator = FAQGenerator()
+            self.is_generating = True
+            self.generator = FAQGenerator()
             generated_faqs = []
 
-            async for faq in generator.generate_faqs_stream(text, num_questions, tone):
+            async for faq in self.generator.generate_faqs_stream(text, num_questions, tone):
+                if not self.is_generating:
+                    break
                 generated_faqs.append(faq)
                 await self.faq_manager.add_generated_faq(self.faq, faq)
                 await self.send_faq_update(faq)
@@ -96,10 +99,23 @@ class FAQConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Generation error: {str(e)}", exc_info=True)
             await self.send_error(str(e))
+        finally:
+            self.is_generating = False
+            self.generator = None
 
     async def receive(self, text_data: str) -> None:
         try:
             data = json.loads(text_data)
+
+            if data.get('type') == 'stop':
+                self.is_generating = False
+                if self.generator:
+                    await self.generator.stop()
+                await self.send_json({
+                    "type": "status",
+                    "status": "stopped"
+                })
+                return
 
             # Validate input using serializer
             serializer = FAQSerializer(data={

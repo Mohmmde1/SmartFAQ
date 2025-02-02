@@ -28,6 +28,7 @@ export default function SmartFAQ() {
     const [numQuestions, setNumQuestions] = useState(5);
     const [tone, setTone] = useState("neutral");
     const [error, setError] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const { socket, isConnected, sendMessage } = useWebSocket();
 
@@ -92,6 +93,10 @@ export default function SmartFAQ() {
                                 router.replace(`/faq/${data.faq.id}`);
                             }
                         }
+                        if (data.status === 'complete' || data.status === 'stopped') {
+                            setIsGenerating(false);
+                            setIsLoading(false);
+                        }
                         break;
 
                     case 'error':
@@ -119,6 +124,7 @@ export default function SmartFAQ() {
         }
 
         setError(null);
+        setIsGenerating(true);
         setIsLoading(true);
         setFaq(null);
         setMessages([]);
@@ -132,10 +138,21 @@ export default function SmartFAQ() {
         });
 
         if (!success) {
+            setIsGenerating(false);
             setIsLoading(false);
             toast.error('Failed to send message');
         }
     }, [inputText, numQuestions, tone, isConnected, sendMessage]);
+
+    const handleStop = useCallback(() => {
+        if (!socket || !isConnected) return;
+
+        sendMessage({
+            type: 'stop'
+        });
+        setIsGenerating(false);
+        toast.info('Generation stopped');
+    }, [socket, isConnected, sendMessage]);
 
     const handleScrape = async (url: string) => {
         try {
@@ -183,10 +200,12 @@ export default function SmartFAQ() {
                     onQuestionsChange={setNumQuestions}
                     onToneChange={setTone}
                     onGenerate={handleGenerate}
+                    onStop={handleStop}
+                    isGenerating={isGenerating}
                 />
                 <GeneratedFAQs
                     faqs={messages}
-                    isLoading={isLoading}
+                    isLoading={isGenerating}
                 />
             </div>
         </div>

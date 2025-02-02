@@ -12,9 +12,21 @@ type FAQOptionsProps = {
     onQuestionsChange: (value: number) => void;
     onToneChange: (value: string) => void;
     onGenerate: () => void;
+    onStop: () => void;
+    isGenerating: boolean;
 }
 
-export function FAQOptions({ numQuestions, tone, disabled = false, onQuestionsChange, onToneChange, onGenerate, update = true }: FAQOptionsProps) {
+export function FAQOptions({
+    numQuestions,
+    tone,
+    disabled = false,
+    onQuestionsChange,
+    onToneChange,
+    onGenerate,
+    onStop,
+    isGenerating,
+    update = true
+}: FAQOptionsProps) {
     return (
         <Card>
             <CardHeader>
@@ -47,9 +59,15 @@ export function FAQOptions({ numQuestions, tone, disabled = false, onQuestionsCh
                         </SelectContent>
                     </Select>
                 </div>
-                <Button onClick={onGenerate} disabled={disabled} className="w-full">
-                    {update ? 'Update FAQ' : 'Generate FAQ'}
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        onClick={isGenerating ? onStop : onGenerate}
+                        variant={isGenerating ? "destructive" : "default"}
+                        className="w-full"
+                    >
+                        {isGenerating ? "Stop Generation" : update ? "Update FAQ" : "Generate FAQ"}
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     )
