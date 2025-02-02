@@ -35,7 +35,7 @@ export function URLInput({ onScrape, disabled }: URLInputProps) {
                 onClick={handleScrape}
                 disabled={!url || disabled || isLoading}
             >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Scrape"}
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Extract Summary"}
             </Button>
         </div>
     )

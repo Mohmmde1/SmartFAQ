@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Tuple
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -127,3 +128,17 @@ def _get_tone_statistics(queryset):
         {'tone': item['tone'] or 'Uncategorized', 'value': item['value']}
         for item in tones
     ]
+
+def validate_url(url: str) -> Tuple[bool, str]:
+    """Validate URL format and scheme."""
+    try:
+        result = urlparse(url)
+        if not all([result.scheme, result.netloc]):
+            return False, "Invalid URL format. URL must include scheme (http/https) and domain"
+
+        if result.scheme not in ['http', 'https']:
+            return False, f"Invalid URL scheme '{result.scheme}'. Only http and https are supported"
+
+        return True, ""
+    except Exception:
+        return False, "Invalid URL format"

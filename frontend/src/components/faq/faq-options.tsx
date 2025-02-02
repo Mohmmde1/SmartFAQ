@@ -26,7 +26,7 @@ export function FAQOptions({ numQuestions, tone, disabled = false, onQuestionsCh
                     <Slider
                         id="num-questions"
                         min={1}
-                        max={20}
+                        max={10}
                         step={1}
                         value={[numQuestions]}
                         onValueChange={(value) => onQuestionsChange(value[0])}

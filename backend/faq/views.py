@@ -10,7 +10,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from .models import FAQ
 from .serializers import FAQSerializer, FAQStatisticsSerializer
-from .services import generate_faq, get_faq_statistics, scrape_and_summarize
+from .services import generate_faq, get_faq_statistics, scrape_and_summarize, validate_url
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,13 @@ class FAQViewSet(ModelViewSet):
         if not url:
             return Response(
                 {'error': 'URL is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        is_valid, error_message = validate_url(url)
+        if not is_valid:
+            return Response(
+                {'error': error_message},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

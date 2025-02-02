@@ -142,10 +142,10 @@ export default function SmartFAQ() {
             setIsLoading(true);
             const { content } = await scrapeService.scrape(url);
             setInputText(content);
-            toast.success('Content scraped successfully');
+            toast.success('Content summarized successfully');
         } catch (error) {
             if (error instanceof AppError) {
-                toast.error(error.message);
+                toast.error(error?.details?.error || error.message);
             } else {
                 toast.error('Failed to scrape URL');
             }
