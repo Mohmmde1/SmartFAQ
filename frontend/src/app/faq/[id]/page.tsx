@@ -14,6 +14,9 @@ import { useParams } from 'next/navigation';
 import { AppError } from '@/lib/errors';
 import { URLInput } from '@/components/faq/url-input';
 import { scrapeService } from '@/services/scrapeService';
+import { pdfService } from '@/services/pdfService'
+import { FileUpload } from '@/components/faq/file-upload'
+import { SourceSelector } from '@/components/faq/source-selector';
 
 
 export default function SmartFAQ() {
@@ -171,6 +174,23 @@ export default function SmartFAQ() {
         }
     }
 
+    const handleFileUpload = async (file: File) => {
+        try {
+            setIsLoading(true)
+            const { content } = await pdfService.upload(file)
+            setInputText(content)
+            toast.success('PDF content extracted successfully')
+        } catch (error) {
+            if (error instanceof AppError) {
+                toast.error(error?.details?.error || error.message)
+            } else {
+                toast.error('Failed to process PDF')
+            }
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-8">
@@ -182,8 +202,9 @@ export default function SmartFAQ() {
 
             <div className="grid gap-8 md:grid-cols-2">
                 <div className="space-y-4">
-                    <URLInput
+                    <SourceSelector
                         onScrape={handleScrape}
+                        onUpload={handleFileUpload}
                         disabled={isLoading}
                     />
                     <FAQInput

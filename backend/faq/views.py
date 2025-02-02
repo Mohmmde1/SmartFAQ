@@ -1,16 +1,19 @@
 # faq/views.py
+import io
 import logging
 
+import PyPDF2
 import requests
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import FAQ
 from .serializers import FAQSerializer, FAQStatisticsSerializer
-from .services import generate_faq, get_faq_statistics, scrape_and_summarize, validate_url
+from .services import generate_faq, get_faq_statistics, scrape_and_summarize, validate_pdf, validate_url
 
 logger = logging.getLogger(__name__)
 
@@ -72,5 +75,42 @@ class FAQViewSet(ModelViewSet):
             logger.error(f"Error processing URL {url}: {str(e)}")
             return Response(
                 {'error': 'Failed to process content'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(url_path='upload-pdf', detail=False, methods=['post'], parser_classes=[MultiPartParser])
+    def upload_pdf(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Authentication required'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if 'file' not in request.FILES:
+            return Response(
+                {'error': 'No PDF file provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        pdf_file = request.FILES['file']
+        is_valid, error_message = validate_pdf(pdf_file)
+
+        if not is_valid:
+            return Response(
+                {'error': error_message},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_file.read()))
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text()
+
+            return Response({'content': text})
+        except Exception as e:
+            logger.error(f"Error processing PDF: {str(e)}")
+            return Response(
+                {'error': 'Failed to process PDF'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

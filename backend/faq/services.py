@@ -1,8 +1,10 @@
+import io
 import logging
 from datetime import datetime, timedelta
 from typing import List, Tuple
 from urllib.parse import urlparse
 
+import PyPDF2
 import requests
 from bs4 import BeautifulSoup
 from django.db.models import Count
@@ -142,3 +144,30 @@ def validate_url(url: str) -> Tuple[bool, str]:
         return True, ""
     except Exception:
         return False, "Invalid URL format"
+
+def validate_pdf(pdf_file) -> tuple[bool, str]:
+    """Validate PDF file constraints."""
+    if not pdf_file or pdf_file.size == 0:
+        return False, "PDF file is empty"
+
+    # Check file size (10MB limit)
+    if pdf_file.size > 10 * 1024 * 1024:  # 10MB in bytes
+        return False, "PDF file size must be less than 10MB"
+
+    # Check file type
+    if not pdf_file.name.endswith('.pdf'):
+        return False, "File must be a PDF"
+
+    try:
+        # Store current position
+        pdf_file.seek(0)
+        # Check number of pages
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        if len(pdf_reader.pages) > 50:
+            return False, "PDF must not exceed 50 pages"
+
+        # Reset file pointer for later reading
+        pdf_file.seek(0)
+        return True, ""
+    except Exception as e:
+        return False, f"Invalid PDF file: {str(e)}"
