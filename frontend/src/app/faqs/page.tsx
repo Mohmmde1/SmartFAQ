@@ -4,38 +4,52 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination"
-import { ArrowUpDown, Plus, Pencil } from "lucide-react"
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import { Plus } from "lucide-react"
 import { useFAQs } from "@/hooks/useFAQs"
+import { columns } from "./columns"
 import { TableSkeleton } from "@/components/table-skeleton"
+import {
+    ColumnFiltersState,
+    SortingState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    useReactTable,
+} from "@tanstack/react-table"
 
 export default function FAQsPage() {
-    const [searchTerm, setSearchTerm] = useState("")
-    const [sortColumn, setSortColumn] = useState<string | null>(null)
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+    const [sorting, setSorting] = useState<SortingState>([])
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 10
 
     const { faqs: faqData, isLoading, error } = useFAQs({
         page: currentPage,
     })
 
-    const handleSort = (column: string) => {
-        if (sortColumn === column) {
-            setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-        } else {
-            setSortColumn(column)
-            setSortDirection("asc")
-        }
-        setCurrentPage(1)
-    }
+    const table = useReactTable({
+        data: faqData?.results || [],
+        columns,
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        state: {
+            sorting,
+            columnFilters,
+        },
+    })
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -48,112 +62,91 @@ export default function FAQsPage() {
                 </Link>
             </div>
 
-            <div className="mb-6">
+            <div className="flex items-center py-4">
                 <Input
-                    placeholder="Search FAQs..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Filter FAQs..."
+                    value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                        table.getColumn("title")?.setFilterValue(event.target.value)
+                    }
                     className="max-w-sm"
                 />
             </div>
 
-            <div className="bg-card rounded-lg shadow overflow-hidden">
+            <div className="rounded-md border">
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-muted/50">
-                            <TableHead className="w-[300px]">
-                                <Button variant="ghost" onClick={() => handleSort("title")} className="font-semibold">
-                                    Title <ArrowUpDown className="ml-2 h-4 w-4" />
-                                </Button>
-                            </TableHead>
-                            <TableHead>
-                                <Button variant="ghost" onClick={() => handleSort("tone")} className="font-semibold">
-                                    Tone <ArrowUpDown className="ml-2 h-4 w-4" />
-                                </Button>
-                            </TableHead>
-                            <TableHead>
-                                <Button variant="ghost" onClick={() => handleSort("questionsCount")} className="font-semibold">
-                                    Questions <ArrowUpDown className="ml-2 h-4 w-4" />
-                                </Button>
-                            </TableHead>
-                            <TableHead>
-                                <Button variant="ghost" onClick={() => handleSort("createdAt")} className="font-semibold">
-                                    Created At <ArrowUpDown className="ml-2 h-4 w-4" />
-                                </Button>
-                            </TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead key={header.id}>
+                                        {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext()
+                                            )}
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        ))}
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={5}>
+                                <TableCell colSpan={columns.length}>
                                     <TableSkeleton />
                                 </TableCell>
                             </TableRow>
                         ) : error ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center text-destructive">
+                                <TableCell colSpan={columns.length} className="text-center text-destructive">
                                     {error}
                                 </TableCell>
                             </TableRow>
-                        ) : faqData?.results.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center">
-                                    No FAQs found
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            faqData?.results.map((faq, index) => (
-                                <TableRow key={faq.id} className={index % 2 === 0 ? "bg-background" : "bg-muted/20"}>
-                                    <TableCell className="font-medium">{faq.title}</TableCell>
-                                    <TableCell>{faq.tone}</TableCell>
-                                    <TableCell>{faq.generated_faqs.length}</TableCell>
-                                    <TableCell>{new Date(faq.created_at).toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm" asChild>
-                                            <Link href={`/faq/${faq.id}`}>
-                                                <Pencil className="h-4 w-4 mr-2" />
-                                                Edit FAQ
-                                            </Link>
-                                        </Button>
-                                    </TableCell>
+                        ) : table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow key={row.id}>
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id}>
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </TableCell>
+                                    ))}
                                 </TableRow>
                             ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                    No FAQs found.
+                                </TableCell>
+                            </TableRow>
                         )}
                     </TableBody>
                 </Table>
             </div>
 
-            <Pagination className="mt-6">
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious
-                            href="#"
-                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                        />
-                    </PaginationItem>
-                    <PaginationItem>
-                        <span className="text-sm">
-                            Page {currentPage} of {Math.ceil((faqData?.count || 0) / itemsPerPage)}
-                        </span>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationNext
-                            href="#"
-                            onClick={() => setCurrentPage((prev) =>
-                                Math.min(prev + 1, Math.ceil((faqData?.count || 0) / itemsPerPage))
-                            )}
-                            className={
-                                currentPage === Math.ceil((faqData?.count || 0) / itemsPerPage)
-                                    ? "pointer-events-none opacity-50"
-                                    : ""
-                            }
-                        />
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
+            <div className="flex items-center justify-end space-x-2 py-4">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                        setCurrentPage((prev) =>
+                            Math.min(prev + 1, Math.ceil((faqData?.count || 0) / 10))
+                        )
+                    }
+                    disabled={currentPage === Math.ceil((faqData?.count || 0) / 10)}
+                >
+                    Next
+                </Button>
+            </div>
         </div>
     )
 }

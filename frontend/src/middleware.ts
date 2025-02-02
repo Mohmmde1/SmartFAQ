@@ -55,7 +55,7 @@ export const config = {
         '/',
         '/dashboard/:path*',
         '/faqs/:path*',
-        'faq/:path*',
+        '/faq/:path*',
         '/auth',
     ]
 }
