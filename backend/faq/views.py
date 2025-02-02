@@ -93,8 +93,9 @@ class FAQViewSet(ModelViewSet):
             )
 
         pdf_file = request.FILES['file']
-        is_valid, error_message = validate_pdf(pdf_file)
 
+        # Validate PDF
+        is_valid, error_message = validate_pdf(pdf_file)
         if not is_valid:
             return Response(
                 {'error': error_message},
@@ -102,7 +103,8 @@ class FAQViewSet(ModelViewSet):
             )
 
         try:
-            pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_file.read()))
+            # File pointer is already at start due to validation
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
             text = ""
             for page in pdf_reader.pages:
                 text += page.extract_text()
