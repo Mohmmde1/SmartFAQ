@@ -55,6 +55,8 @@ class FAQGenerator:
             tone=tone,
             text=text
         )
+        if len(content) > 4096:
+            content = content[:4096]
         logger.debug(f"Generated prompt with length: {len(content)}")
 
         try:

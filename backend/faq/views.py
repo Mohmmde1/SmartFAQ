@@ -1,20 +1,29 @@
 # faq/views.py
-
+import logging
 from datetime import datetime, timedelta
 
+import requests
+from asgiref.sync import async_to_sync
+from bs4 import BeautifulSoup
 from django.db.models import Count
 from django.db.models.functions import TruncDate, TruncMonth
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.viewsets import ModelViewSet
+from sumy.nlp.stemmers import Stemmer
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.summarizers.lsa import LsaSummarizer
+from sumy.utils import get_stop_words
 
 from .models import FAQ
 from .serializers import FAQSerializer, FAQStatisticsSerializer
 from .services import generate_faq
 
-
+logger = logging.getLogger(__name__)
 class FAQViewSet(ModelViewSet):
     serializer_class = FAQSerializer
     permission_classes = [IsAuthenticated]
@@ -120,3 +129,68 @@ class FAQViewSet(ModelViewSet):
         }
         serializer = FAQStatisticsSerializer(statistics_data)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def scrape(self, request):
+        """Scrape URL and return summarized content."""
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Authentication required'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        url = request.data.get('url')
+        if not url:
+            return Response(
+                {'error': 'URL is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            async def _scrape_and_summarize():
+                logger.info(f"Scraping URL: {url} for user {request.user.email}")
+
+                # Get webpage content
+                response = requests.get(url, timeout=10)
+                response.raise_for_status()
+
+                # Extract text from paragraphs
+                soup = BeautifulSoup(response.text, 'html.parser')
+                text = " ".join([p.get_text(strip=True) for p in soup.find_all("p")])
+
+                if not text:
+                    return "No content found to summarize"
+
+                # Prepare summarizer
+                parser = PlaintextParser.from_string(text, Tokenizer("english"))
+                stemmer = Stemmer("english")
+                summarizer = LsaSummarizer(stemmer)
+                summarizer.stop_words = get_stop_words("english")
+
+                # Generate and clean summary
+                summary = summarizer(parser.document, 4)
+                cleaned_summary = []
+                for sentence in summary:
+                    # Remove numbering and clean up
+                    clean_text = str(sentence)
+                    if clean_text.startswith('['):
+                        clean_text = clean_text.split(']')[-1].strip()
+                    cleaned_summary.append(clean_text)
+
+                return " ".join(cleaned_summary)
+
+            summarized_content = async_to_sync(_scrape_and_summarize)()
+            return Response({'content': summarized_content})
+
+        except requests.RequestException as e:
+            logger.error(f"Network error while scraping {url}: {str(e)}")
+            return Response(
+                {'error': 'Failed to fetch URL content'},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+        except Exception as e:
+            logger.error(f"Error processing URL {url}: {str(e)}")
+            return Response(
+                {'error': 'Failed to process content'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

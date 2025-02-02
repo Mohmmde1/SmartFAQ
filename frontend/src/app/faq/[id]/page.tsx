@@ -12,6 +12,8 @@ import { FAQInput } from '@/components/faq/faq-input';
 import { FAQOptions } from '@/components/faq/faq-options';
 import { useParams } from 'next/navigation';
 import { AppError } from '@/lib/errors';
+import { URLInput } from '@/components/faq/url-input';
+import { scrapeService } from '@/services/scrapeService';
 
 
 export default function SmartFAQ() {
@@ -135,6 +137,23 @@ export default function SmartFAQ() {
         }
     }, [inputText, numQuestions, tone, isConnected, sendMessage]);
 
+    const handleScrape = async (url: string) => {
+        try {
+            setIsLoading(true);
+            const { content } = await scrapeService.scrape(url);
+            setInputText(content);
+            toast.success('Content scraped successfully');
+        } catch (error) {
+            if (error instanceof AppError) {
+                toast.error(error.message);
+            } else {
+                toast.error('Failed to scrape URL');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-8">
@@ -145,11 +164,17 @@ export default function SmartFAQ() {
             </h2>
 
             <div className="grid gap-8 md:grid-cols-2">
-                <FAQInput
-                    content={inputText}
-                    onChange={setInputText}
-                    disabled={isLoading}
-                />
+                <div className="space-y-4">
+                    <URLInput
+                        onScrape={handleScrape}
+                        disabled={isLoading}
+                    />
+                    <FAQInput
+                        content={inputText}
+                        onChange={setInputText}
+                        disabled={isLoading}
+                    />
+                </div>
                 <FAQOptions
                     numQuestions={numQuestions}
                     tone={tone}
