@@ -30,6 +30,7 @@ class Command(BaseCommand):
             self.stdout.write("Setting up Google auth...")
             call_command(
                 "setup_google_provider",
+                name="Google",
                 client_id=settings.GOOGLE_CLIENT_ID,
                 secret_key=settings.GOOGLE_CLIENT_SECRET,
                 commit=True,
