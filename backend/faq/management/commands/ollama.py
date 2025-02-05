@@ -37,9 +37,21 @@ class Command(BaseCommand):
 
     def check_service_running(self):
         try:
-            response = requests.get("http://localhost:11434")
-            return response.status_code == 200
-        except requests.RequestException:
+            # Try each allowed host from Django settings
+            for host in settings.ALLOWED_HOSTS:
+                self.stdout.write(f"Checking Ollama service at {host}...")
+                if host == "*":
+                    # Skip wildcard, try localhost
+                    host = "localhost"
+                try:
+                    response = requests.get(f"http://{host}:11434/api/version")
+                    if response.status_code == 200:
+                        self.stdout.write(f"Ollama service running at {host}")
+                        return True
+                except requests.RequestException:
+                    continue
+            return False
+        except Exception:
             return False
 
     def start_service(self, model_name):
