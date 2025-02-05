@@ -29,8 +29,9 @@ const handleDownload = async (id: number) => {
         a.click();
         window.URL.revokeObjectURL(url);
         a.remove();
-    } catch (error) {
-        toast.error('Failed to download FAQ');
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to download FAQ';
+        toast.error(errorMessage);
     }
 };
 

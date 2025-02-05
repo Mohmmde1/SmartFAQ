@@ -12,10 +12,8 @@ import { FAQInput } from '@/components/faq/faq-input';
 import { FAQOptions } from '@/components/faq/faq-options';
 import { useParams } from 'next/navigation';
 import { AppError } from '@/lib/errors';
-import { URLInput } from '@/components/faq/url-input';
 import { scrapeService } from '@/services/scrapeService';
 import { pdfService } from '@/services/pdfService'
-import { FileUpload } from '@/components/faq/file-upload'
 import { SourceSelector } from '@/components/faq/source-selector';
 import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button';
@@ -58,6 +56,7 @@ export default function SmartFAQ() {
                 setNumQuestions(data.number_of_faqs || 5)
             } catch (error) {
                 if (error instanceof AppError) {
+                    setError(error.message)
                     toast.error(error.message)
                 } else {
                     toast.error('Failed to fetch FAQ')
@@ -148,7 +147,7 @@ export default function SmartFAQ() {
             setIsLoading(false);
             toast.error('Failed to send message');
         }
-    }, [inputText, numQuestions, tone, isConnected, sendMessage]);
+    }, [inputText, numQuestions, tone, isConnected, sendMessage, id]); // Add id to dependencies
 
     const handleStop = useCallback(() => {
         if (!socket || !isConnected) return;
@@ -221,6 +220,13 @@ export default function SmartFAQ() {
                     </Button>
                 )}
             </div>
+
+            {error && (
+                <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-md text-destructive">
+                    <p>{error}</p>
+                </div>
+            )}
+
             <h2>
                 {isConnected ? <span className="text-green-500">Connected</span> : <span className="text-red-500">Disconnected</span>}
             </h2>

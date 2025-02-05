@@ -11,8 +11,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export namespace JwtUtils {
-  export const refreshToken = async (refreshToken: string): Promise<[string | null, string | null]> => {
+export const JwtUtils = {
+  refreshToken: async (refreshToken: string): Promise<[string | null, string | null]> => {
     try {
       const response = await axios.post<RefreshTokenResponse>(
         UrlUtils.makeUrl(
@@ -28,10 +28,10 @@ export namespace JwtUtils {
     } catch {
       return [null, null];
     }
-  };
+  },
 
-  export const getAccessToken = async (request: NextRequest) => {
-    let token = await getToken({
+  getAccessToken: async (request: NextRequest) => {
+    const token = await getToken({
       req: request,
       secret: process.env.JWT_SECRET,
       cookieName: 'next-auth.session-token',
@@ -76,9 +76,9 @@ export namespace JwtUtils {
     }
 
     return oldAccessToken;
-  }
+  },
 
-  export const isJwtExpired = (token: string): boolean => {
+  isJwtExpired: (token: string): boolean => {
     try {
       const currentTime = Math.round(Date.now() / 1000);
       const decoded = jwt.decode(token) as jwt.JwtPayload | null;
@@ -105,12 +105,12 @@ export namespace JwtUtils {
       console.error('Error checking JWT expiry:', error);
       return true;
     }
-  };
-}
+  }
+};
 
-export namespace UrlUtils {
-  export const makeUrl = (...endpoints: string[]) => {
-    let url = endpoints.reduce((prevUrl, currentPath) => {
+export const UrlUtils = {
+  makeUrl: (...endpoints: string[]) => {
+    const url = endpoints.reduce((prevUrl, currentPath) => {
       if (prevUrl.length === 0) {
         return prevUrl + currentPath;
       }
@@ -120,5 +120,11 @@ export namespace UrlUtils {
         : prevUrl + "/" + currentPath + "/";
     }, "");
     return url;
-  };
+  }
+};
+function isJwtExpired(token: string): boolean {
+  return JwtUtils.isJwtExpired(token);
+}
+async function refreshToken(refreshToken: string): Promise<[string | null, string | null]> {
+  return JwtUtils.refreshToken(refreshToken);
 }

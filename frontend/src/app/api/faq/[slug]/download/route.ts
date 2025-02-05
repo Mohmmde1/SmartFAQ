@@ -3,29 +3,28 @@ import axios from 'axios'
 import { JwtUtils, UrlUtils } from '@/lib/utils'
 import { handleAxiosError } from '@/lib/errors'
 
-export async function GET(
-    request: NextRequest,
-    { params }: { params: { slug: string } }
-) {
+export async function GET(request: NextRequest) {
     try {
         const access_token = await JwtUtils.getAccessToken(request)
-        const { slug } = params
+        const url = new URL(request.url)
+        const parts = url.pathname.split('/')
+        const slug = parts[parts.length - 2]
+        console.log(url.pathname.split('/'))
 
-        const url = UrlUtils.makeUrl(
+        const apiUrl = UrlUtils.makeUrl(
             process.env.NEXT_PUBLIC_BACKEND_API_BASE || "",
             "faq",
-            slug,
+            slug || "",
             "download"
         )
 
-        const response = await axios.get(url, {
+        const response = await axios.get(apiUrl, {
             headers: {
                 'Authorization': `Bearer ${access_token}`,
             },
             responseType: 'arraybuffer'
         })
 
-        // Create PDF response with proper headers
         return new NextResponse(response.data, {
             status: 200,
             headers: {
@@ -33,8 +32,7 @@ export async function GET(
                 'Content-Disposition': `attachment; filename=faq_${slug}.pdf`
             }
         })
-
-    } catch (error: any) {
+    } catch (error) {
         if (axios.isAxiosError(error)) {
             const apiError = handleAxiosError(error)
             return NextResponse.json(

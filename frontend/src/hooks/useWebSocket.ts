@@ -40,7 +40,7 @@ export function useWebSocket() {
         }
     }, [session, status])
 
-    const sendMessage = useCallback((data: any) => {
+    const sendMessage = useCallback((data: Record<string, unknown>) => {
         if (socket?.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify(data))
             return true
