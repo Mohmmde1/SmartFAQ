@@ -4,16 +4,29 @@ import { NextResponse } from "next/server"
 
 export default withAuth(
     async function middleware(request) {
-        console.log("Middleware executed for path:", request.nextUrl.pathname);
+        console.log("=== Middleware Start ===");
+        console.log("URL:", request.url);
+        console.log("Path:", request.nextUrl.pathname);
+        console.log("Method:", request.method);
+        console.log("Headers:", Object.fromEntries(request.headers));
+
         const token = await getToken({
             req: request,
             secret: process.env.JWT_SECRET,
             cookieName: "next-auth.session-token",
         });
 
+        console.log("Token present:", !!token);
+
         const isAuthPage = request.nextUrl.pathname === '/auth';
         const isLandingPage = request.nextUrl.pathname === '/';
         const isAuthenticated = !!token;
+
+        console.log("Route info:", {
+            isAuthPage,
+            isLandingPage,
+            isAuthenticated
+        });
 
         // Redirect authenticated users from landing or auth page to dashboard
         if ((isLandingPage || isAuthPage) && isAuthenticated) {
@@ -35,15 +48,15 @@ export default withAuth(
             return NextResponse.redirect(new URL("/auth", request.url));
         }
 
+        console.log("=== Middleware End ===");
         return NextResponse.next();
     },
     {
         callbacks: {
             authorized: async ({ token }) => {
-                console.log("Authorized callback called:", {
-                    token,
-                    timestamp: new Date().toISOString(),
-                });
+                console.log("=== Auth Callback ===");
+                console.log("Token:", token);
+                console.log("Timestamp:", new Date().toISOString());
                 return true;
             }
         },
