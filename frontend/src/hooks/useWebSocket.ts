@@ -16,8 +16,8 @@ export function useWebSocket() {
             setError('No authentication token found')
             return
         }
-        const baseUrl = "ws://localhost:8000/ws/faq/"
-        const ws = new WebSocket(`${baseUrl}?token=${accessToken}`)
+
+        const ws = new WebSocket(`${process.env.NEXT_PUBLIC_BACKEND}/faq/?token=${accessToken}`)
 
         ws.onopen = () => {
             setIsConnected(true)
