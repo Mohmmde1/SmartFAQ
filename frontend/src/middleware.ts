@@ -1,6 +1,7 @@
-import { getToken } from "next-auth/jwt";
+import { getServerSession } from "next-auth";
 import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
+import { authOptions } from "./app/api/auth/config";
 
 export default withAuth(
     async function middleware(request) {
@@ -10,17 +11,20 @@ export default withAuth(
         console.log("Method:", request.method);
         console.log("Headers:", Object.fromEntries(request.headers));
 
-        const token = await getToken({
-            req: request,
-            secret: process.env.JWT_SECRET,
-            cookieName: "next-auth.session-token",
-        });
+        const session = await getServerSession(authOptions);
 
-        console.log("Token present:", !!token);
+        console.log("Session present:", !!session);
+        if (session) {
+            console.log("Session data:", {
+                user: session.user,
+                expires: session.expires,
+                accessToken: !!session.accessToken
+            });
+        }
 
         const isAuthPage = request.nextUrl.pathname === '/auth';
         const isLandingPage = request.nextUrl.pathname === '/';
-        const isAuthenticated = !!token;
+        const isAuthenticated = !!session;
 
         console.log("Route info:", {
             isAuthPage,
@@ -53,11 +57,12 @@ export default withAuth(
     },
     {
         callbacks: {
-            authorized: async ({ token }) => {
+            authorized: async ({ req }) => {
                 console.log("=== Auth Callback ===");
-                console.log("Token:", token);
+                const session = await getServerSession(authOptions);
+                console.log("Session:", session);
                 console.log("Timestamp:", new Date().toISOString());
-                return true;
+                return !!session;
             }
         },
     }
