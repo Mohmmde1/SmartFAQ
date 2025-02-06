@@ -13,7 +13,6 @@ export default withAuth(
         const token = await getToken({
             req: request,
             secret: process.env.JWT_SECRET,
-            cookieName: "next-auth.session-token",
         });
 
         console.log("Token present:", !!token);
