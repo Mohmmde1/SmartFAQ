@@ -6,9 +6,9 @@ export default withAuth(
     async function middleware(request) {
         console.log("=== Middleware Start ===");
         console.log("URL:", request.url);
+        console.log("NextURL:", request.nextUrl);
         console.log("Path:", request.nextUrl.pathname);
         console.log("Method:", request.method);
-        console.log("Headers:", Object.fromEntries(request.headers));
 
         const token = await getToken({
             req: request,
