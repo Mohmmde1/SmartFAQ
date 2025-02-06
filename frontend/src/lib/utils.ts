@@ -34,7 +34,6 @@ export const JwtUtils = {
     const token = await getToken({
       req: request,
       secret: process.env.JWT_SECRET,
-      cookieName: 'next-auth.session-token',
     });
 
     if (!token) {
