@@ -177,6 +177,9 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 SOCIALACCOUNT_EMAIL_REQUIRED = False
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+OAUTH_CALLBACK_URL = os.environ.get("OAUTH_CALLBACK_URL")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
 ###############################################################################
 # JWT Settings

@@ -4,8 +4,8 @@
 if [ ! -z "$IN_DOCKER" ]; then
     # In Docker environment, variables should already be set
     :
-elif [ -f ./backend/.env.local ]; then
-    export $(cat ./backend/.env.local | grep -v '^#' | xargs)
+elif [ -f ./.env.local ]; then
+    export $(cat ./.env.local | grep -v '^#' | xargs)
 else
     echo "Error: .env.local file not found"
     exit 1

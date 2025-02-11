@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "web-app-template"
+name = "smart-faq"
 version = "0.1.0"
 description = ""
 authors = ["Mohammed Fuad <mohammedfuadalnashriy@gmail.com>"]
