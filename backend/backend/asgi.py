@@ -1,15 +1,13 @@
 import os
+import django  # Import Django first
 
-import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
+django.setup()  # Explicitly initialize Django before anything else
 
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
-
 from auths.custom_ws_middleware import TokenAuthMiddleware
 from faq.routing import websocket_urlpatterns
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings.local")
-django.setup()
 
 application = ProtocolTypeRouter(
     {
