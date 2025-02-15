@@ -37,7 +37,7 @@ export const authOptions = {
     jwt: {
         secret: process.env.JWT_SECRET as string,
     },
-    debug: process.env.NODE_ENV === "production",
+    debug: process.env.NODE_ENV === "development",
     providers: [
         CredentialsProvider({
             name: "Credentials",
