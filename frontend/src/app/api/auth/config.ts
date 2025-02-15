@@ -7,8 +7,9 @@ import { JwtUtils, UrlUtils } from "@/lib/utils";
 import { LoginResponse } from "@/types/api";
 import { AppError } from "@/lib/errors";
 import { Session } from "next-auth"
+import { validateEnv } from "@/lib/config";
 
-// validateEnv();
+validateEnv();
 
 declare module "next-auth/jwt" {
     interface JWT {
