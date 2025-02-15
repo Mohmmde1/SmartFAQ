@@ -62,3 +62,7 @@ Thumbs.db
 
 logs/
 *.log
+
+# Secret settings
+secret.py
+!secret_template.py

@@ -1,3 +1,7 @@
+import ssl
+import subprocess
+
+import nltk
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
@@ -13,14 +17,20 @@ class Command(BaseCommand):
         parser.add_argument("--skip-google", action="store_true")
 
     def handle(self, *args, **options):
+        self.stdout.write("Setting up nltk...")
+
+        # Fix SSL issue and download nltk data
+        ssl._create_default_https_context = ssl._create_unverified_context
+        nltk.download('punkt_tab')
+
         if not options["skip_migrations"]:
             self.stdout.write("Running migrations...")
             call_command("migrate")
 
         if not options["skip_ollama"]:
             self.stdout.write("Setting up Ollama...")
-            call_command("ollama", "install")
-            call_command("ollama", "start", model=settings.OLLAMA_MODEL)
+            subprocess.run(["ollama", "install"], check=True)
+            subprocess.run(["ollama", "start", settings.OLLAMA_MODEL], check=True)
 
         if not options["skip_demo"]:
             self.stdout.write("Setting up demo data...")
