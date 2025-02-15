@@ -21,6 +21,12 @@ class Command(BaseCommand):
         Add arguments to the command.
         """
         parser.add_argument(
+            "--email",
+            "-e",
+            required=False,
+            help="Email of the owner of the faqs"
+        )
+        parser.add_argument(
             "--commit",
             "-c",
             action="store_true",
@@ -35,15 +41,20 @@ class Command(BaseCommand):
         """
         sid = transaction.savepoint()  # Create a savepoint
         try:
-            # Extract the commit flag
+            # Extract the args 
             commit = options["commit"]
-
-            # Create a sample user
-            user, created = User.objects.get_or_create(email="sampleuser@example.com")
-            if created:
-                user.set_password("password123")
-                user.save()
-                self.stdout.write(self.style.SUCCESS(f"Created sample user: {user.email}"))
+            email = options["email"]
+            
+            if not email:
+                # Create a sample user
+                user, created = User.objects.get_or_create(email="sampleuser@example.com")
+                if created:
+                    user.set_password("password123")
+                    user.save()
+                    self.stdout.write(self.style.SUCCESS(f"Created sample user: {user.email}"))
+            else:
+                user = User.objects.get(email=email)
+                self.stdout.write(self.style.SUCCESS(f"Use {email}!"))
 
             # Sample FAQ content
             faqs_data = [
