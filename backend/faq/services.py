@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from typing import List, Tuple
 from urllib.parse import urlparse
+from zipfile import Path
 
 import PyPDF2
 import requests
@@ -165,7 +166,6 @@ def validate_pdf(pdf_file) -> tuple[bool, str]:
     except Exception as e:
         return False, f"Invalid PDF file: {str(e)}"
 
-
 def generate_faq_pdf(faq) -> BytesIO:
     """Generate beautiful PDF file from FAQ using WeasyPrint."""
 
@@ -301,3 +301,13 @@ def generate_faq_pdf(faq) -> BytesIO:
     HTML(string=html_string).write_pdf(buffer, stylesheets=[CSS(string=css_string)])
     buffer.seek(0)
     return buffer
+
+def extract_text(pdf_file: Path):
+    """Reset pdf pointer and extract the text"""
+    # File pointer is already at start due to validation
+    pdf_reader = PyPDF2.PdfReader(pdf_file)
+    text = ""
+    for page in pdf_reader.pages:
+        text += page.extract_text()
+
+    return text
