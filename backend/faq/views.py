@@ -34,8 +34,8 @@ class FAQViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         text = serializer.validated_data["content"]
-        number_of_faqs = serializer.validated_data.get("number_of_faqs", 3)
-        tone = serializer.validated_data.get("tone", "neutral")
+        number_of_faqs = serializer.validated_data.get("number_of_faqs")
+        tone = serializer.validated_data.get("tone")
 
         serializer.save(
             user=self.request.user,
