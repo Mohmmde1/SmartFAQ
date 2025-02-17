@@ -85,16 +85,18 @@ class Command(BaseCommand):
                 faq = FAQ.objects.create(
                     title=titles[_ % len(titles)],
                     content=contents[_ % len(contents)],
+                    tone=FAQ.TONE_CHOICES[_ % len(FAQ.TONE_CHOICES)][0],
                     user=user
                 )
                 
                 # Create Q&As for each FAQ
                 for question, answer in qa_pairs:
-                    QuestionAnswer.objects.create(
-                        faq=faq,
+                    qa = QuestionAnswer.objects.create(
                         question=question,
                         answer=answer
                     )
+                    
+                    faq.generated_faqs.add(qa)
 
             # Handle transaction
             if commit:

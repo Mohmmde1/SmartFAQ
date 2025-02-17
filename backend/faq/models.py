@@ -24,7 +24,7 @@ class QuestionAnswer(ModelBase):
 class FAQ(ModelBase):
     TONE_CHOICES = [
         ("formal", "Formal"),
-        ("netural", "Neutral"),
+        ("neutral", "Neutral"),
         ("casual", "Casual"),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="faqs")
