@@ -50,7 +50,7 @@ def scrape_and_summarize(url: str, user_email: str) -> str:
     text = " ".join([p.get_text(strip=True) for p in soup.find_all("p")])
 
     if not text:
-        return "No content found to summarize"
+        return None
 
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
     stemmer = Stemmer("english")
