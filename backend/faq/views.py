@@ -2,12 +2,14 @@
 import logging
 
 from django.http import FileResponse
+from requests.exceptions import ConnectionError, RequestException
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from urllib3.exceptions import MaxRetryError
 
 from .models import FAQ
 from .serializers import FAQSerializer, FAQStatisticsSerializer, ScrapeSerializer
@@ -16,6 +18,7 @@ from .services import (
     generate_faq,
     generate_faq_pdf,
     get_faq_statistics,
+    scrape_and_summarize,
     validate_pdf,
 )
 
@@ -47,13 +50,57 @@ class FAQViewSet(ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def scrape(self, request):
-        serializer = ScrapeSerializer(
-            data=request.data, 
-            context={'user_email': request.user.email}
-        )
+        serializer = ScrapeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = serializer.create(serializer.validated_data)
-        return Response(result)
+        
+        try:
+            content = scrape_and_summarize(
+                serializer.validated_data["url"],
+                request.user.email
+            )
+            if content == "No content found to summarize":
+                logger.warning(
+                    "No content found to summarize for URL: %s", 
+                    serializer.validated_data["url"]
+                )
+                return Response(
+                    {"non_field_errors": ["No content found to summarize"]},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            return Response({"content": content})
+
+        except (ConnectionError, MaxRetryError) as err:
+            logger.error(
+                "Connection error for URL %s: %s", 
+                serializer.validated_data["url"], 
+                str(err)
+            )
+            return Response(
+                {"url": ["Unable to connect to the provided URL. Please check if the URL is accessible."]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        except RequestException as err:
+            logger.error(
+                "Request failed for URL %s: %s", 
+                serializer.validated_data["url"], 
+                str(err)
+            )
+            return Response(
+                {"url": ["Failed to fetch content from URL. Please try again later."]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Exception:
+            logger.exception(
+                "Unexpected error processing URL %s", 
+                serializer.validated_data["url"]
+            )
+            return Response(
+                {"non_field_errors": ["An unexpected error occurred while processing the URL."]},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(url_path="upload-pdf", detail=False, methods=["post"], parser_classes=[MultiPartParser])
     def upload_pdf(self, request):

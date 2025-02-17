@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import jwt from "jsonwebtoken";
-import { getToken, JWT } from "next-auth/jwt";
+import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 import { RefreshTokenResponse } from "@/types/api";
 import axios from "axios";

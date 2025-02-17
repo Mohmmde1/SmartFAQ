@@ -1,16 +1,21 @@
-export interface PaginationError {
+export type PaginationError = {
     detail: string;
 }
 
-export interface ApiError {
+export type ApiError = {
     code: string;
-    message: string;
-    details?: Record<string, string[]> | PaginationError;
+    attr: string;
+    detail: string;
 }
 
-export type ApiResponse<T> = {
-    data?: T;
-    error?: ApiError;
+export type ApiErrorReponse = {
+    type: "validation_error" | "server_error" |  "client_error";
+    errors: ApiError[];
+}
+
+export type ClientApiError = {
+    code: string;
+    message: string;
 }
 
 export type LoginRequestBody = {
@@ -72,24 +77,24 @@ export type FAQListResponse = {
     results: FAQ[] | null;
 }
 
-export interface PaginatedResponse<T> {
+export type PaginatedResponse<T> = {
     count: number;
     next: string | null;
     previous: string | null;
     results: T[];
 }
 
-export interface DailyTrend {
+export type DailyTrend = {
     day: string;  // 'Mon', 'Tue', etc.
     count: number;
 }
 
-export interface ToneStats {
+export type ToneStats = {
     tone: string;   // 'formal', 'casual', etc.
     value: number;  // count of FAQs with this tone
 }
 
-export interface FAQStatistics {
+export type FAQStatistics = {
     total_faqs: number;
     total_questions: number;
     avg_questions_per_faq: number;
