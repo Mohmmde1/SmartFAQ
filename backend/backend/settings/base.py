@@ -41,6 +41,7 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
+    "drf_standardized_errors",
     # allauth + dj-rest-auth
     "dj_rest_auth",
     "dj_rest_auth.registration",
@@ -150,7 +151,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
         'rest_framework.authentication.SessionAuthentication',
     ),
-    #"EXCEPTION_HANDLER": "backend.utils.custom_exception_handler",
+    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
