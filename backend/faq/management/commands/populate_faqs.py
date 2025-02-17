@@ -27,6 +27,13 @@ class Command(BaseCommand):
             help="Email of the owner of the faqs"
         )
         parser.add_argument(
+            "--quantity",
+            "-q",
+            required=False,
+            default=5,
+            help="Number of faqs to be generated"
+        )
+        parser.add_argument(
             "--commit",
             "-c",
             action="store_true",
@@ -41,67 +48,65 @@ class Command(BaseCommand):
         """
         sid = transaction.savepoint()  # Create a savepoint
         try:
-            # Extract the args 
-            commit = options["commit"]
+            # Extract options
+            quantity = int(options["quantity"])
             email = options["email"]
+            commit = options["commit"]
             
+            # Handle user creation/retrieval
             if not email:
-                # Create a sample user
-                user, created = User.objects.get_or_create(email="sampleuser@example.com")
+                user, created = User.objects.get_or_create(
+                    email="sampleuser@example.com",
+                    defaults={'is_active': True}
+                )
                 if created:
                     user.set_password("password123")
                     user.save()
                     self.stdout.write(self.style.SUCCESS(f"Created sample user: {user.email}"))
             else:
                 user = User.objects.get(email=email)
-                self.stdout.write(self.style.SUCCESS(f"Use {email}!"))
+                self.stdout.write(self.style.SUCCESS(f"Using existing user: {email}"))
 
-            # Sample FAQ content
-            faqs_data = [
-                {
-                    "title": "How to use SmartFAQ?",
-                    "content": "SmartFAQ helps users generate FAQs from their content.",
-                    "questions": [
-                        {"question": "What is SmartFAQ?", "answer": "SmartFAQ is a tool for generating FAQs."},
-                        {"question": "How do I use it?", "answer": "Upload your content, and FAQs are generated auto."},
-                    ],
-                },
-                {
-                    "title": "Features of SmartFAQ",
-                    "content": "SmartFAQ supports FAQ generation, saving, and sharing.",
-                    "questions": [
-                        {"question": "What are the features?", "answer": "SmartFAQ generates, saves,and manages FAQs."},
-                        {"question": "Can I share FAQs?", "answer": "Yes, FAQs can be shared with others."},
-                    ],
-                },
+            # Sample data
+            titles = ["Features of SmartFAQ", "How to use SmartFAQ?"]
+            contents = [
+                "SmartFAQ helps users generate FAQs from their content.", 
+                "SmartFAQ supports FAQ generation, saving, and sharing." 
+            ]
+            qa_pairs = [
+                ('What is SmartFAQ?', 'SmartFAQ is a tool for generating FAQs.'),
+                ('How do I use it?', 'Upload your content, and FAQs are generated auto.'),
+                ('What are the features?', 'SmartFAQ generates, saves, and manages FAQs.'),
+                ('Can I share FAQs?', 'Yes, FAQs can be shared with others.')
             ]
 
-            # Create FAQs and related questions
-            for faq_data in faqs_data:
+            # Create FAQs and their Q&As
+            for _ in range(quantity):
                 faq = FAQ.objects.create(
-                    user=user,
-                    title=faq_data["title"],
-                    content=faq_data["content"],
+                    title=titles[_ % len(titles)],
+                    content=contents[_ % len(contents)],
+                    user=user
                 )
-
-                for question_data in faq_data["questions"]:
-                    question = QuestionAnswer.objects.create(
-                        question=question_data["question"],
-                        answer=question_data["answer"],
+                
+                # Create Q&As for each FAQ
+                for question, answer in qa_pairs:
+                    QuestionAnswer.objects.create(
+                        faq=faq,
+                        question=question,
+                        answer=answer
                     )
-                    faq.generated_faqs.add(question)
 
-                self.stdout.write(self.style.SUCCESS(f"Added FAQ: {faq.title}"))
-
-            # Commit or rollback transaction based on --commit flag
+            # Handle transaction
             if commit:
                 transaction.savepoint_commit(sid)
                 self.stdout.write(
-                    self.style.SUCCESS("Database population completed successfully with changes committed.")
+                    self.style.SUCCESS(f"Created {quantity} FAQs with Q&As. Changes committed.")
                 )
             else:
                 transaction.savepoint_rollback(sid)
-                self.stdout.write(self.style.WARNING("Dry-run completed successfully. No changes committed."))
+                self.stdout.write(
+                    self.style.WARNING("Dry-run completed. No changes committed.")
+                )
 
         except Exception as e:
             transaction.savepoint_rollback(sid)
