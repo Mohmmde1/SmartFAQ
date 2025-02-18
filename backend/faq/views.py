@@ -2,7 +2,6 @@
 import logging
 
 from django.http import FileResponse
-from requests.exceptions import ConnectionError, RequestException
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
