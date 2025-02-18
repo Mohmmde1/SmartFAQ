@@ -18,6 +18,12 @@ from sumy.summarizers.lsa import LsaSummarizer
 from sumy.utils import get_stop_words
 from weasyprint import CSS, HTML
 
+from .exceptions import (
+    ConnectionScrapeException,
+    NoContentScrapeException,
+    RequestScrapeException,
+    ScrapeException,
+)
 from .faq_generator import FAQGenerator
 from .models import QuestionAnswer
 
@@ -39,33 +45,47 @@ def generate_faq(text: str, number_of_faqs: int = 5, tone: str = "netural") -> L
     return generator.generate_faqs(text, number_of_faqs, tone)
 
 
-def scrape_and_summarize(url: str, user_email: str) -> str:
+def scrape_and_summarize(url: str) -> str:
     """Scrape URL and return summarized content."""
-    logger.info(f"Scraping URL: {url} for user {user_email}")
+    logger.info(f"Scraping URL: {url}")
+    
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
 
-    response = requests.get(url, timeout=10)
-    response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        text = " ".join([p.get_text(strip=True) for p in soup.find_all("p")])
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    text = " ".join([p.get_text(strip=True) for p in soup.find_all("p")])
+        if not text:
+            logger.warning(f"No content found to summarize for URL: {url}")
+            raise NoContentScrapeException(field="content")
 
-    if not text:
-        return None
+        parser = PlaintextParser.from_string(text, Tokenizer("english"))
+        stemmer = Stemmer("english")
+        summarizer = LsaSummarizer(stemmer)
+        summarizer.stop_words = get_stop_words("english")
 
-    parser = PlaintextParser.from_string(text, Tokenizer("english"))
-    stemmer = Stemmer("english")
-    summarizer = LsaSummarizer(stemmer)
-    summarizer.stop_words = get_stop_words("english")
+        summary = summarizer(parser.document, 4)
+        cleaned_summary = []
+        for sentence in summary:
+            clean_text = str(sentence)
+            if clean_text.startswith("["):
+                clean_text = clean_text.split("]")[-1].strip()
+            cleaned_summary.append(clean_text)
 
-    summary = summarizer(parser.document, 4)
-    cleaned_summary = []
-    for sentence in summary:
-        clean_text = str(sentence)
-        if clean_text.startswith("["):
-            clean_text = clean_text.split("]")[-1].strip()
-        cleaned_summary.append(clean_text)
+        return " ".join(cleaned_summary)
 
-    return " ".join(cleaned_summary)
+    except (ConnectionError) as err:
+        logger.error(f"Connection failed for URL: {url}")
+        raise ConnectionScrapeException(field="url") from err
+        
+    except requests.RequestException as err:
+        logger.error(f"Request failed for URL: {url}")
+        raise RequestScrapeException(field="url") from err
+        
+    except Exception as err:
+        logger.exception(f"Unexpected error scraping URL: {url}")
+        raise ScrapeException("An unexpected error occurred") from err
 
 
 def get_faq_statistics(queryset) -> dict:

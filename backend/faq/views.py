@@ -5,14 +5,11 @@ from django.http import FileResponse
 from requests.exceptions import ConnectionError, RequestException
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from urllib3.exceptions import MaxRetryError
 
-from .exceptions import NoContentError, RequestError, ServiceUnavailableError
 from .models import FAQ
 from .serializers import FAQSerializer, FAQStatisticsSerializer, PdfSerializer, ScrapeSerializer
 from .services import (
@@ -51,35 +48,14 @@ class FAQViewSet(ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def scrape(self, request):
-        """
-        Scrape and summarize content from a URL.
-        """
+        """Scrape and summarize content from a URL."""
         serializer = ScrapeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        try:
-            content = scrape_and_summarize(
-                serializer.validated_data["url"],
-                request.user.email
-            )
-            
-        except ConnectionError as err:
-            logger.error("Connection failed for URL: %s", serializer.validated_data["url"])
-            raise ConnectionError() from err
-        except RequestException as err:
-            logger.error("Request failed for URL: %s", serializer.validated_data["url"])
-            raise RequestError() from err
-        except Exception as err:
-            logger.exception("Unexpected error scraping URL: %s", serializer.validated_data["url"])
-            raise ServiceUnavailableError() from err
+        content = scrape_and_summarize(
+            serializer.validated_data["url"],
+        )
         
-        if not content:
-                logger.warning(
-                    "No content found to summarize for URL: %s", 
-                    serializer.validated_data["url"]
-                )
-                raise NoContentError()
-                
         return Response({"content": content})
 
     @action(url_path="upload-pdf", detail=False, methods=["post"], parser_classes=[MultiPartParser])
