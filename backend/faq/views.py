@@ -10,12 +10,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import FAQ
+from .selectors.statistics_selector import StatisticsSelector
 from .serializers import FAQSerializer, FAQStatisticsSerializer, PdfSerializer, ScrapeSerializer
 from .services import (
     extract_text,
     generate_faq,
     generate_faq_pdf,
-    get_faq_statistics,
     scrape_and_summarize,
 )
 
@@ -27,7 +27,7 @@ class FAQViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return FAQ.objects.filter(user=self.request.user).order_by("-created_at").prefetch_related("generated_faqs")
+        return FAQ.objects.get_user_faqs(self.request.user)
 
     def perform_create(self, serializer):
         text = serializer.validated_data["content"]
@@ -42,19 +42,20 @@ class FAQViewSet(ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def statistics(self, _request):
-        statistics_data = get_faq_statistics(self.get_queryset())
-        return Response(FAQStatisticsSerializer(statistics_data).data)
+        """Get FAQ statistics."""
+        stats = StatisticsSelector.get_statistics(self.get_queryset())
+        return Response(FAQStatisticsSerializer(stats).data)
 
     @action(detail=False, methods=["post"])
     def scrape(self, request):
         """Scrape and summarize content from a URL."""
         serializer = ScrapeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         content = scrape_and_summarize(
             serializer.validated_data["url"],
         )
-        
+
         return Response({"content": content})
 
     @action(url_path="upload-pdf", detail=False, methods=["post"], parser_classes=[MultiPartParser])
@@ -67,8 +68,7 @@ class FAQViewSet(ModelViewSet):
         except Exception as e:
             logger.error("Error processing PDF: %s", str(e))
             return Response(
-                {"non_field_errors": ["Failed to process PDF"]},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"non_field_errors": ["Failed to process PDF"]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     @action(detail=True, methods=["get"])

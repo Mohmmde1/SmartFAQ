@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 from typing import List
 from zipfile import Path
@@ -7,8 +7,6 @@ from zipfile import Path
 import PyPDF2
 import requests
 from bs4 import BeautifulSoup
-from django.db.models import Count
-from django.db.models.functions import TruncDate, TruncMonth
 from django.template.loader import render_to_string
 from sumy.nlp.stemmers import Stemmer
 from sumy.nlp.tokenizers import Tokenizer
@@ -85,62 +83,6 @@ def scrape_and_summarize(url: str) -> str:
     except Exception as err:
         logger.exception(f"Unexpected error scraping URL: {url}")
         raise ScrapeException("An unexpected error occurred") from err
-
-
-def get_faq_statistics(queryset) -> dict:
-    """Get FAQ statistics."""
-    total_faqs = queryset.count()
-    total_questions = sum(faq.generated_faqs.count() for faq in queryset)
-    avg_questions = total_questions / total_faqs if total_faqs > 0 else 0
-    last_faq = queryset.first()
-
-    # Trends
-    six_months_ago = datetime.now() - timedelta(days=180)
-    seven_days_ago = datetime.now() - timedelta(days=7)
-
-    monthly_trends = list(
-        queryset.filter(created_at__gte=six_months_ago)
-        .annotate(month=TruncMonth("created_at"))
-        .values("month")
-        .annotate(count=Count("id"))
-        .order_by("month")
-    )
-
-    daily_trends = list(
-        queryset.filter(created_at__gte=seven_days_ago)
-        .annotate(day=TruncDate("created_at"))
-        .values("day")
-        .annotate(count=Count("id"))
-        .order_by("day")
-    )
-
-    all_days = _process_daily_trends(daily_trends)
-    tones = _get_tone_statistics(queryset)
-
-    return {
-        "total_faqs": total_faqs,
-        "total_questions": total_questions,
-        "avg_questions_per_faq": round(avg_questions, 1),
-        "last_faq_created": last_faq,
-        "monthly_trends": [{"month": item["month"].strftime("%b"), "count": item["count"]} for item in monthly_trends],
-        "daily_trends": all_days,
-        "tones": tones,
-    }
-
-
-def _process_daily_trends(daily_trends):
-    existing_days = {trend["day"]: trend["count"] for trend in daily_trends}
-    all_days = []
-    for i in range(7):
-        day = (datetime.now() - timedelta(days=i)).date()
-        all_days.append({"day": day.strftime("%a"), "count": existing_days.get(day, 0)})
-    all_days.reverse()
-    return all_days
-
-
-def _get_tone_statistics(queryset):
-    tones = list(queryset.values("tone").annotate(value=Count("id")).order_by("-value"))
-    return [{"tone": item["tone"] or "Uncategorized", "value": item["value"]} for item in tones]
 
 
 def generate_faq_pdf(faq) -> BytesIO:
