@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from . import views  # Ensure this import is correct and does not cause circular imports
+from . import views
 
 urlpatterns = [
     path("auth/", include("dj_rest_auth.urls")),
