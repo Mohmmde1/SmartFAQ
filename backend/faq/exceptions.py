@@ -29,13 +29,13 @@ class RequestScrapeException(ScrapeException):
     default_code = "request_error"
 
 
-class ParseError(APIException):
+class ParseException(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Failed to process PDF"
     default_code = "pdf_error"
 
 
-class PdfGenerationError(APIException):
+class PdfGenerationException(APIException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     default_detail = "Failed to generate PDF"
     default_code = "pdf_error"

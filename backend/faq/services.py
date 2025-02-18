@@ -18,8 +18,8 @@ from weasyprint import HTML
 from .exceptions import (
     ConnectionScrapeException,
     NoContentScrapeException,
-    ParseError,
-    PdfGenerationError,
+    ParseException,
+    PdfGenerationException,
     RequestScrapeException,
     ScrapeException,
 )
@@ -98,7 +98,7 @@ def generate_faq_pdf(faq) -> BytesIO:
         buffer.seek(0)
     except Exception as e:
         logger.error(f"Error generating PDF: {str(e)}")
-        raise PdfGenerationError() from e
+        raise PdfGenerationException() from e
 
     return buffer
 
@@ -113,6 +113,6 @@ def extract_text(pdf_file: Path):
             text += page.extract_text()
     except Exception as e:
         logger.error("Error processing PDF: %s", str(e))
-        raise ParseError() from e
+        raise ParseException() from e
 
     return text
