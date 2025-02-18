@@ -42,6 +42,6 @@ class StatisticsSelector:
                 "daily_trends": daily_trends,
                 "tones": tones,
             }
-            cache.set(cache_key, stats, timeout=3600)  # Cache for 1 hour
+            cache.set(cache_key, stats, timeout=0)
 
         return stats
