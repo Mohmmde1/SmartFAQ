@@ -143,49 +143,6 @@ def _get_tone_statistics(queryset):
     tones = list(queryset.values("tone").annotate(value=Count("id")).order_by("-value"))
     return [{"tone": item["tone"] or "Uncategorized", "value": item["value"]} for item in tones]
 
-
-def validate_url(url: str) -> Tuple[bool, str]:
-    """Validate URL format and scheme."""
-    try:
-        result = urlparse(url)
-        if not all([result.scheme, result.netloc]):
-            return False, "Invalid URL format. URL must include scheme (http/https) and domain"
-
-        if result.scheme not in ["http", "https"]:
-            return False, f"Invalid URL scheme '{result.scheme}'. Only http and https are supported"
-
-        return True, ""
-    except Exception:
-        return False, "Invalid URL format"
-
-
-def validate_pdf(pdf_file) -> tuple[bool, str]:
-    """Validate PDF file constraints."""
-    if not pdf_file or pdf_file.size == 0:
-        return False, "PDF file is empty"
-
-    # Check file size (10MB limit)
-    if pdf_file.size > 10 * 1024 * 1024:  # 10MB in bytes
-        return False, "PDF file size must be less than 10MB"
-
-    # Check file type
-    if not pdf_file.name.endswith(".pdf"):
-        return False, "File must be a PDF"
-
-    try:
-        # Store current position
-        pdf_file.seek(0)
-        # Check number of pages
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        if len(pdf_reader.pages) > 50:
-            return False, "PDF must not exceed 50 pages"
-
-        # Reset file pointer for later reading
-        pdf_file.seek(0)
-        return True, ""
-    except Exception as e:
-        return False, f"Invalid PDF file: {str(e)}"
-
 def generate_faq_pdf(faq) -> BytesIO:
     """Generate beautiful PDF file from FAQ using WeasyPrint."""
 
