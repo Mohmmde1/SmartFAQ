@@ -36,3 +36,9 @@ class PdfGenerationException(APIException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     default_detail = "Failed to generate PDF"
     default_code = "pdf_error"
+
+
+class FAQGenerationException(APIException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    default_detail = "Failed to generate FAQs"
+    default_code = "faqs_error"

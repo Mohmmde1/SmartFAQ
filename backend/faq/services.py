@@ -17,6 +17,7 @@ from weasyprint import HTML
 
 from .exceptions import (
     ConnectionScrapeException,
+    FAQGenerationException,
     NoContentScrapeException,
     ParseException,
     PdfGenerationException,
@@ -33,8 +34,13 @@ def generate_faq(text: str, number_of_faqs: int = 5, tone: str = "netural") -> L
     """
     Generate FAQs using the FAQGenerator class.
     """
-    generator = FAQGenerator()
-    return generator.generate_faqs(text, number_of_faqs, tone)
+    try:
+        generator = FAQGenerator()
+        qs = generator.generate_faqs(text, number_of_faqs, tone)
+    except Exception as err:
+        raise FAQGenerationException() from err
+
+    return qs
 
 
 def scrape_and_summarize(url: str) -> str:
