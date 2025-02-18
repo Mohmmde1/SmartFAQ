@@ -8,7 +8,7 @@ from asgiref.sync import sync_to_async
 from django.conf import settings
 from pydantic import BaseModel, Field
 
-from .models import QuestionAnswer
+from ..models import QuestionAnswer
 
 logger = logging.getLogger(__name__)
 

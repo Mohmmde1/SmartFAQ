@@ -23,7 +23,7 @@ from .exceptions import (
     RequestScrapeException,
     ScrapeException,
 )
-from .faq_generator import FAQGenerator
+from .helpers.faq_generator import FAQGenerator
 from .models import QuestionAnswer
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def scrape_and_summarize(url: str) -> str:
 
         if not text:
             logger.warning(f"No content found to summarize for URL: {url}")
-            raise NoContentScrapeException(field="content")
+            raise NoContentScrapeException()
 
         parser = PlaintextParser.from_string(text, Tokenizer("english"))
         stemmer = Stemmer("english")
@@ -69,15 +69,17 @@ def scrape_and_summarize(url: str) -> str:
 
     except ConnectionError as err:
         logger.error(f"Connection failed for URL: {url}")
-        raise ConnectionScrapeException(field="url") from err
+        raise ConnectionScrapeException() from err
 
     except requests.RequestException as err:
         logger.error(f"Request failed for URL: {url}")
-        raise RequestScrapeException(field="url") from err
-
+        raise RequestScrapeException() from err
+    except NoContentScrapeException as err:
+        logger.error(f"No content has been found: {url}")
+        raise NoContentScrapeException() from err
     except Exception as err:
         logger.exception(f"Unexpected error scraping URL: {url}")
-        raise ScrapeException("An unexpected error occurred") from err
+        raise ScrapeException() from err
 
 
 def generate_faq_pdf(faq) -> BytesIO:

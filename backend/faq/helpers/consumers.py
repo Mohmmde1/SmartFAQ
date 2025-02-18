@@ -7,9 +7,9 @@ from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model
 
+from ..models import FAQ, QuestionAnswer
+from ..serializers import FAQSerializer, QuestionAnswerSerializer
 from .async_faq_generator import FAQGenerator
-from .models import FAQ, QuestionAnswer
-from .serializers import FAQSerializer, QuestionAnswerSerializer
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
