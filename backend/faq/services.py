@@ -1,8 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import List, Tuple
-from urllib.parse import urlparse
+from typing import List
 from zipfile import Path
 
 import PyPDF2
@@ -48,7 +47,7 @@ def generate_faq(text: str, number_of_faqs: int = 5, tone: str = "netural") -> L
 def scrape_and_summarize(url: str) -> str:
     """Scrape URL and return summarized content."""
     logger.info(f"Scraping URL: {url}")
-    
+
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -75,14 +74,14 @@ def scrape_and_summarize(url: str) -> str:
 
         return " ".join(cleaned_summary)
 
-    except (ConnectionError) as err:
+    except ConnectionError as err:
         logger.error(f"Connection failed for URL: {url}")
         raise ConnectionScrapeException(field="url") from err
-        
+
     except requests.RequestException as err:
         logger.error(f"Request failed for URL: {url}")
         raise RequestScrapeException(field="url") from err
-        
+
     except Exception as err:
         logger.exception(f"Unexpected error scraping URL: {url}")
         raise ScrapeException("An unexpected error occurred") from err
@@ -142,6 +141,7 @@ def _process_daily_trends(daily_trends):
 def _get_tone_statistics(queryset):
     tones = list(queryset.values("tone").annotate(value=Count("id")).order_by("-value"))
     return [{"tone": item["tone"] or "Uncategorized", "value": item["value"]} for item in tones]
+
 
 def generate_faq_pdf(faq) -> BytesIO:
     """Generate beautiful PDF file from FAQ using WeasyPrint."""
@@ -278,6 +278,7 @@ def generate_faq_pdf(faq) -> BytesIO:
     HTML(string=html_string).write_pdf(buffer, stylesheets=[CSS(string=css_string)])
     buffer.seek(0)
     return buffer
+
 
 def extract_text(pdf_file: Path):
     """Reset pdf pointer and extract the text"""
