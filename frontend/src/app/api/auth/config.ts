@@ -7,8 +7,9 @@ import { JwtUtils, UrlUtils } from "@/lib/utils";
 import { LoginResponse } from "@/types/api";
 import { AppError } from "@/lib/errors";
 import { Session } from "next-auth"
+import { validateEnv } from "@/lib/config";
 
-// validateEnv();
+validateEnv();
 
 declare module "next-auth/jwt" {
     interface JWT {
@@ -37,7 +38,7 @@ export const authOptions = {
     jwt: {
         secret: process.env.JWT_SECRET as string,
     },
-    debug: process.env.NODE_ENV === "production",
+    debug: process.env.NODE_ENV === "development",
     providers: [
         CredentialsProvider({
             name: "Credentials",

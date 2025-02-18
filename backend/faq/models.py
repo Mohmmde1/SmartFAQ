@@ -2,6 +2,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from .managers import FAQManager
+
 User = get_user_model()
 
 
@@ -24,7 +26,7 @@ class QuestionAnswer(ModelBase):
 class FAQ(ModelBase):
     TONE_CHOICES = [
         ("formal", "Formal"),
-        ("netural", "Neutral"),
+        ("neutral", "Neutral"),
         ("casual", "Casual"),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="faqs")
@@ -34,6 +36,8 @@ class FAQ(ModelBase):
     number_of_faqs = models.PositiveIntegerField(default=3)
     tone = models.CharField(choices=TONE_CHOICES, default="neutral")
     category = models.CharField(max_length=255, default="General")
+
+    objects = FAQManager()
 
     def __str__(self):
         return self.title

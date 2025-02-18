@@ -25,6 +25,8 @@ markdown = "^3.7"
 pypdf2 = "^3.0.1"
 reportlab = "^4.2.5"
 weasyprint = "^64.0"
+django-debug-toolbar = "^5.0.1"
+drf-standardized-errors = "^0.14.1"
 
 
 [tool.poetry.group.dev.dependencies]

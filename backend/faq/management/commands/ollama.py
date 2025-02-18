@@ -1,9 +1,9 @@
 import logging
+import platform
 import subprocess
 import time
 
 import psutil
-import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -21,45 +21,50 @@ class Command(BaseCommand):
 
     def check_ollama_installed(self):
         try:
-            subprocess.run(["ollama", "--version"], capture_output=True)
+            subprocess.run(["ollama", "--version"], capture_output=True, check=True)
             return True
-        except FileNotFoundError:
+        except (FileNotFoundError, subprocess.CalledProcessError):
             return False
 
     def install_ollama(self):
-        self.stdout.write("Installing Ollama...")
+        system = platform.system().lower()
+        self.stdout.write(f"Installing Ollama on {system}...")
+
         try:
-            subprocess.run(["curl", "-fsSL", "https://ollama.ai/install.sh", "|", "sh"], shell=True, check=True)
+            if system == "linux":
+                subprocess.run(["curl", "-fsSL", "https://ollama.ai/install.sh", "|", "sh"], shell=True, check=True)
+            elif system == "darwin":  # macOS
+                subprocess.run(["brew", "install", "ollama"], check=True)
+            elif system == "windows":
+                self.stderr.write("Please install Ollama manually from https://ollama.ai/download for Windows.")
+                return False
+            else:
+                self.stderr.write(f"Unsupported operating system: {system}")
+                return False
             return True
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to install Ollama: {e}")
             return False
 
     def check_service_running(self):
-        try:
-            # Try each allowed host from Django settings
-            for host in settings.ALLOWED_HOSTS:
-                self.stdout.write(f"Checking Ollama service at {host}...")
-                if host == "*":
-                    # Skip wildcard, try localhost
-                    host = "localhost"
-                try:
-                    response = requests.get(f"http://{host}:11434/api/version")
-                    if response.status_code == 200:
-                        self.stdout.write(f"Ollama service running at {host}")
-                        return True
-                except requests.RequestException:
-                    continue
-            return False
-        except Exception:
-            return False
+        """Check if Ollama service is running by looking for its process."""
+        for proc in psutil.process_iter(["pid", "name"]):
+            try:
+                if "ollama" in proc.info["name"].lower():
+                    self.stdout.write(f"Ollama service is running (PID: {proc.info['pid']})")
+                    return True
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+        self.stdout.write("Ollama service is not running")
+        return False
+
 
     def start_service(self, model_name):
         if not self.check_service_running():
             self.stdout.write("Starting Ollama service...")
-            subprocess.Popen(["ollama", "serve"])
+            subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             time.sleep(5)
-
+        
         self.stdout.write(f"Loading model {model_name}...")
         try:
             subprocess.run(["ollama", "pull", model_name], check=True)

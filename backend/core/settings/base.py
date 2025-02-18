@@ -3,19 +3,14 @@
 ###############################################################################
 
 import os
-from datetime import timedelta
 from pathlib import Path
 
 ###############################################################################
 # Core Settings
 ###############################################################################
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-3ry2+dao1s6uwgw@8_m2-)9e%+0m9w0%56^7@!ybbm-x$@&5*^")
-DEBUG = os.environ.get("DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-ROOT_URLCONF = "backend.urls"
-WSGI_APPLICATION = "backend.wsgi.application"
-ROOT_URLCONF = "backend.urls"
+ROOT_URLCONF = "core.urls"
+WSGI_APPLICATION = "core.wsgi.application"
 
 ###############################################################################
 # Application Settings
@@ -40,10 +35,13 @@ CUSTOM_APPS = [
 
 # Third-party apps
 THIRD_PARTY_APPS = [
+    # Django Tool Bar
+    "debug_toolbar",
     # DRF
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
+    "drf_standardized_errors",
     # allauth + dj-rest-auth
     "dj_rest_auth",
     "dj_rest_auth.registration",
@@ -69,6 +67,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # ALLAUTH MIDDLEWARE
     "allauth.account.middleware.AccountMiddleware",
+    # DEBUG TOOLBAR
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ###############################################################################
@@ -148,7 +148,10 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ),
+    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
@@ -177,26 +180,11 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 SOCIALACCOUNT_EMAIL_REQUIRED = False
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
-OAUTH_CALLBACK_URL = os.environ.get("OAUTH_CALLBACK_URL")
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
 ###############################################################################
 # JWT Settings
 ###############################################################################
-
 REST_USE_JWT = True
-JWT_SECRET_KEY = SECRET_KEY
-
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
-    "UPDATE_LAST_LOGIN": True,
-    "SIGNING_KEY": JWT_SECRET_KEY,
-    "ALGORITHM": "HS256",
-}
 
 ###############################################################################
 # Dj-Rest-Auth Settings
@@ -205,7 +193,6 @@ REST_AUTH = {
     "USE_JWT": True,
     "JWT_AUTH_HTTPONLY": False,  # Important for the frontend to access the refresh token
 }
-
 
 ###############################################################################
 # Ollama AI Settings
@@ -279,9 +266,16 @@ LOGGING = {
 ###############################################################################
 # ASGI Settings
 ###############################################################################
-ASGI_APPLICATION = "backend.asgi.application"
+ASGI_APPLICATION = "core.asgi.application"
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
+
+###############################################################################
+# Debug Toolbar
+###############################################################################
+INTERNAL_IPS = [
+    "127.0.0.1",
+]

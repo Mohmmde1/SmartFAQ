@@ -33,6 +33,8 @@ static/
 venv/
 ENV/
 .env
+.env.prod
+
 
 # IDE
 .idea/
@@ -60,3 +62,7 @@ Thumbs.db
 
 logs/
 *.log
+
+# Secret settings
+secret.py
+!secret_template.py
