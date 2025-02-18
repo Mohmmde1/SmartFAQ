@@ -18,6 +18,8 @@ from weasyprint import HTML
 from .exceptions import (
     ConnectionScrapeException,
     NoContentScrapeException,
+    ParseError,
+    PdfGenerationError,
     RequestScrapeException,
     ScrapeException,
 )
@@ -80,27 +82,37 @@ def scrape_and_summarize(url: str) -> str:
 
 def generate_faq_pdf(faq) -> BytesIO:
     """Generate beautiful PDF file from FAQ using WeasyPrint."""
-    context = {
-        "faq": faq,
-        "date": datetime.now().strftime("%B %d, %Y"),
-        "generated_faqs": faq.generated_faqs.all(),
-        "total_questions": faq.generated_faqs.count(),
-    }
 
-    html_string = render_to_string("faq/pdf_template.html", context)
+    try:
+        context = {
+            "faq": faq,
+            "date": datetime.now().strftime("%B %d, %Y"),
+            "generated_faqs": faq.generated_faqs.all(),
+            "total_questions": faq.generated_faqs.count(),
+        }
 
-    buffer = BytesIO()
-    HTML(string=html_string).write_pdf(buffer)
-    buffer.seek(0)
+        html_string = render_to_string("faq/pdf_template.html", context)
+
+        buffer = BytesIO()
+        HTML(string=html_string).write_pdf(buffer)
+        buffer.seek(0)
+    except Exception as e:
+        logger.error(f"Error generating PDF: {str(e)}")
+        raise PdfGenerationError() from e
+
     return buffer
 
 
 def extract_text(pdf_file: Path):
     """Reset pdf pointer and extract the text"""
-    # File pointer is already at start due to validation
-    pdf_reader = PyPDF2.PdfReader(pdf_file)
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text()
+    try:
+        # File pointer is already at start due to validation
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+    except Exception as e:
+        logger.error("Error processing PDF: %s", str(e))
+        raise ParseError() from e
 
     return text

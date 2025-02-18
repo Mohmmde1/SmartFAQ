@@ -2,7 +2,6 @@
 import logging
 
 from django.http import FileResponse
-from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -61,22 +60,15 @@ class FAQViewSet(ModelViewSet):
     @action(url_path="upload-pdf", detail=False, methods=["post"], parser_classes=[MultiPartParser])
     def upload_pdf(self, request):
         serializer = PdfSerializer(data=request.FILES)
-        try:
-            serializer.is_valid(raise_exception=True)
-            text = extract_text(serializer.validated_data["file"])
-            return Response({"content": text})
-        except Exception as e:
-            logger.error("Error processing PDF: %s", str(e))
-            return Response(
-                {"non_field_errors": ["Failed to process PDF"]}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer.is_valid(raise_exception=True)
+
+        text = extract_text(serializer.validated_data["file"])
+
+        return Response({"content": text})
 
     @action(detail=True, methods=["get"])
     def download(self, request, pk=None):
         faq = self.get_object()
-        try:
-            pdf_buffer = generate_faq_pdf(faq)
-            return FileResponse(pdf_buffer, as_attachment=True, filename=f"faq_{faq.id}.pdf")
-        except Exception as e:
-            logger.error(f"Error generating PDF: {str(e)}")
-            return Response({"error": "Failed to generate PDF"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        pdf_buffer = generate_faq_pdf(faq)
+
+        return FileResponse(pdf_buffer, as_attachment=True, filename=f"faq_{faq.id}.pdf")
