@@ -9,8 +9,8 @@ from pathlib import Path
 # Core Settings
 ###############################################################################
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-ROOT_URLCONF = "backend.urls"
-WSGI_APPLICATION = "backend.wsgi.application"
+ROOT_URLCONF = "core.urls"
+WSGI_APPLICATION = "core.wsgi.application"
 
 ###############################################################################
 # Application Settings
@@ -149,7 +149,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.BasicAuthentication",
-        'rest_framework.authentication.SessionAuthentication',
+        "rest_framework.authentication.SessionAuthentication",
     ),
     "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
@@ -266,7 +266,7 @@ LOGGING = {
 ###############################################################################
 # ASGI Settings
 ###############################################################################
-ASGI_APPLICATION = "backend.asgi.application"
+ASGI_APPLICATION = "core.asgi.application"
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",

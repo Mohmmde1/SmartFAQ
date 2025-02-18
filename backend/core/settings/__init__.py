@@ -8,6 +8,5 @@ except ImportError as e:
     ) from e
 except Exception as e:
     raise Exception(
-        "An unexpected error occurred while importing settings from 'secret.py'. "
-        f"Error: {str(e)}"
+        "An unexpected error occurred while importing settings from 'secret.py'. " f"Error: {str(e)}"
     ) from e
