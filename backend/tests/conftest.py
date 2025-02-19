@@ -38,3 +38,11 @@ def faq_with_qa(basic_faq, question_answers):
     """Fixture for creating a FAQ instance with question-answer pairs."""
     basic_faq.generated_faqs.add(*question_answers)
     return basic_faq
+
+
+@pytest.fixture
+def faq_queryset(faq_with_qa):
+    for _ in range(9):
+        faq_with_qa.id = None
+        faq_with_qa.save()
+    return FAQ.objects.all()

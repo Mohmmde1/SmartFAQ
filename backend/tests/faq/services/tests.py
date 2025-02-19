@@ -15,7 +15,6 @@ from faq.services import generate_faq, generate_faq_pdf, scrape_and_summarize
 
 
 class TestFAQServices:
-    @pytest.mark.skip(reason="This test is currently not working")
     @pytest.mark.django_db
     def test_generate_faq(self):
         """Test generate_faq service."""
