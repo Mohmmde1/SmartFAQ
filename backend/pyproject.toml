@@ -27,6 +27,7 @@ reportlab = "^4.2.5"
 weasyprint = "^64.0"
 django-debug-toolbar = "^5.0.1"
 drf-standardized-errors = "^0.14.1"
+pytest-django = "^4.10.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -80,6 +81,9 @@ unfixable = []
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "core.settings"
+python_files = ["tests/**/[!__]*.py"]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
