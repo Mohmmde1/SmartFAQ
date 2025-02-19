@@ -25,3 +25,9 @@ def question_answers():
         QuestionAnswer.objects.create(question="What is SmartFAQ?", answer="A FAQ generator."),
         QuestionAnswer.objects.create(question="How does it work?", answer="It uses AI."),
     ]
+
+
+@pytest.fixture
+def question_answer():
+    """Fixture for creating a basic question-answer"""
+    return QuestionAnswer.objects.create(question="What is SmartFAQ?", answer="A FAQ generator.")
