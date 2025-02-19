@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 from requests.exceptions import RequestException
 
-from faq.exceptions import ConnectionScrapeException, NoContentScrapeException, RequestScrapeException
+from faq.exceptions import ConnectionScrapeException, NoContentScrapeException, RequestScrapeException, ScrapeException
 from faq.services import generate_faq, scrape_and_summarize
 
 
@@ -66,4 +66,12 @@ class TestFAQServices:
         mock_get.side_effect = RequestException()
 
         with pytest.raises(RequestScrapeException):
+            scrape_and_summarize("https://www.example.com")
+
+    @patch("faq.services.requests.get")
+    def test_scrape_and_summarize_exception(self, mock_get):
+        """Test scraping with unexpected exception."""
+        mock_get.side_effect = Exception()
+
+        with pytest.raises(ScrapeException):
             scrape_and_summarize("https://www.example.com")

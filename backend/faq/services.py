@@ -4,10 +4,10 @@ from io import BytesIO
 from typing import List
 from zipfile import Path
 
-import PyPDF2
 import requests
 from bs4 import BeautifulSoup
 from django.template.loader import render_to_string
+from pypdf import PdfReader
 from sumy.nlp.stemmers import Stemmer
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.parsers.plaintext import PlaintextParser
@@ -111,16 +111,19 @@ def generate_faq_pdf(faq) -> BytesIO:
     return buffer
 
 
-def extract_text(pdf_file: Path):
-    """Reset pdf pointer and extract the text"""
+def extract_text(pdf_file: Path) -> str:
+    """Extract text from PDF file."""
     try:
-        # File pointer is already at start due to validation
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        pdf_reader = PdfReader(pdf_file)  # Updated class name
         text = ""
         for page in pdf_reader.pages:
             text += page.extract_text()
+
+        if not text.strip():
+            raise ParseException("No text content found in PDF")
+
+        return text
+
     except Exception as e:
         logger.error("Error processing PDF: %s", str(e))
         raise ParseException() from e
-
-    return text
