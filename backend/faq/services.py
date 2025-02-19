@@ -30,7 +30,7 @@ from .models import QuestionAnswer
 logger = logging.getLogger(__name__)
 
 
-def generate_faq(text: str, number_of_faqs: int = 5, tone: str = "netural") -> List[QuestionAnswer]:
+def generate_faq(text: str, number_of_faqs: int = 5, tone: str = "neutral") -> List[QuestionAnswer]:
     """
     Generate FAQs using the FAQGenerator class.
     """
