@@ -31,3 +31,10 @@ def question_answers():
 def question_answer():
     """Fixture for creating a basic question-answer"""
     return QuestionAnswer.objects.create(question="What is SmartFAQ?", answer="A FAQ generator.")
+
+
+@pytest.fixture
+def faq_with_qa(basic_faq, question_answers):
+    """Fixture for creating a FAQ instance with question-answer pairs."""
+    basic_faq.generated_faqs.add(*question_answers)
+    return basic_faq

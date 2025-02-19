@@ -114,7 +114,7 @@ def generate_faq_pdf(faq) -> BytesIO:
 def extract_text(pdf_file: Path) -> str:
     """Extract text from PDF file."""
     try:
-        pdf_reader = PdfReader(pdf_file)  # Updated class name
+        pdf_reader = PdfReader(pdf_file)
         text = ""
         for page in pdf_reader.pages:
             text += page.extract_text()

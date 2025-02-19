@@ -1,10 +1,17 @@
-from unittest.mock import patch
+from io import BytesIO
+from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import RequestException
 
-from faq.exceptions import ConnectionScrapeException, NoContentScrapeException, RequestScrapeException, ScrapeException
-from faq.services import generate_faq, scrape_and_summarize
+from faq.exceptions import (
+    ConnectionScrapeException,
+    NoContentScrapeException,
+    PdfGenerationException,
+    RequestScrapeException,
+    ScrapeException,
+)
+from faq.services import generate_faq, generate_faq_pdf, scrape_and_summarize
 
 
 class TestFAQServices:
@@ -75,3 +82,27 @@ class TestFAQServices:
 
         with pytest.raises(ScrapeException):
             scrape_and_summarize("https://www.example.com")
+
+    @pytest.mark.django_db
+    @patch("faq.services.BytesIO")
+    def test_generate_faq_pdf_success(self, mock_bytesio, faq_with_qa):
+        """Test generating PDF from FAQ."""
+        # Arrange
+        mock_buffer = Mock(spec=BytesIO)
+        mock_bytesio.return_value = mock_buffer
+
+        # Act
+        result = generate_faq_pdf(faq_with_qa)
+
+        # Assert
+        assert result == mock_buffer
+        mock_buffer.seek.assert_called_once_with(0)
+
+    @pytest.mark.django_db
+    @patch("faq.services.BytesIO")
+    def test_generate_faq_pdf_exception(self, mock_bytesio, faq_with_qa):
+        """Test PdfGeneration exception."""
+        mock_bytesio.side_effect = Exception()
+
+        with pytest.raises(PdfGenerationException):
+            generate_faq_pdf(faq_with_qa)
