@@ -31,16 +31,14 @@ logger = logging.getLogger(__name__)
 
 
 def generate_faq(text: str, number_of_faqs: int = 5, tone: str = "neutral") -> List[QuestionAnswer]:
-    """
-    Generate FAQs using the FAQGenerator class.
-    """
+    """Generate FAQs using the FAQGenerator singleton."""
     try:
+        # Will always return the same instance
         generator = FAQGenerator()
-        qs = generator.generate_faqs(text, number_of_faqs, tone)
+        return generator.generate_faqs(text, number_of_faqs, tone)
     except Exception as err:
+        logger.error(f"Error generating FAQs: {str(err)}")
         raise FAQGenerationException() from err
-
-    return qs
 
 
 def scrape_and_summarize(url: str) -> str:

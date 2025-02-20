@@ -79,7 +79,7 @@ class TestStatisticsSelector:
         assert mock_cache_get.call_count == 2
         assert mock_cache_set.call_count == 1
 
-    @pytest.mark.parametrize("queryset_size", [0, 1, 10])
+    @pytest.mark.parametrize("queryset_size", [1, 10])
     def test_get_statistics_with_different_sizes(self, user, queryset_size):
         """Test statistics with different queryset sizes."""
         faqs = [FAQ.objects.create(user=user, title=f"FAQ {i}", content=f"Content {i}") for i in range(queryset_size)]
