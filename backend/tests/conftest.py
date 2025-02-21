@@ -1,6 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIClient, APIRequestFactory
 
 from faq.models import FAQ, QuestionAnswer
 
@@ -53,3 +53,16 @@ def faq_queryset(faq_with_qa):
 def api_factory():
     """Return APIRequestFactory instance."""
     return APIRequestFactory()
+
+
+@pytest.fixture
+def api_client():
+    """Return APIClient instance."""
+    return APIClient()
+
+
+@pytest.fixture
+def authenticated_client(api_client, user):
+    """Return authenticated APIClient."""
+    api_client.force_authenticate(user=user)
+    return api_client

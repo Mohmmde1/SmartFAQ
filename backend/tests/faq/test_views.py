@@ -1,28 +1,20 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import force_authenticate
 
 from auths.models import User
 from faq.models import FAQ
-from faq.views import FAQViewSet
 
 
 @pytest.mark.django_db
 class TestFAQViewSet:
-    def test_get_queryset_authenticated_user(self, user, basic_faq, api_factory):
+    def test_get_queryset_authenticated_user(self, user, basic_faq, authenticated_client):
         """Test that get_queryset returns only FAQs for authenticated user."""
         # Create another user and their FAQs
         other_user = User.objects.create_user(email="other@test.com", password="testpass123")
         other_faq = FAQ.objects.create(user=other_user, title="Other FAQ", content="Other content")
 
-        # Create API factory and view
-        view = FAQViewSet.as_view({"get": "list"})
-
-        # Make request and force authentication
-        request = api_factory.get(reverse("faq-list"))
-        force_authenticate(request, user=user)
-        response = view(request)
+        response = authenticated_client.get(reverse("faq-list"))
         data = response.data
 
         # Assert response
@@ -31,35 +23,26 @@ class TestFAQViewSet:
         assert data["results"][0]["id"] == basic_faq.id
         assert other_faq.id not in [faq["id"] for faq in data["results"]]
 
-    def test_get_queryset_unauthenticated(self, api_factory):
+    def test_get_queryset_unauthenticated(self, api_client):
         """Test that unauthenticated users cannot access FAQs."""
-        view = FAQViewSet.as_view({"get": "list"})
-        request = api_factory.get(reverse("faq-list"))
-
-        response = view(request)
+        response = api_client.get(reverse("faq-list"))
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_update_faq_success(self, basic_faq, user, api_factory):
+    def test_update_faq_success(self, basic_faq, user, authenticated_client):
         """Test updating faq."""
-        view = FAQViewSet.as_view({"patch": "partial_update"})
-        url = reverse("faq-detail", args=[basic_faq.id])
+        url = reverse("faq-detail", kwargs={"pk": basic_faq.id})
 
-        request = api_factory.patch(url, {"content": "Updated", "tone": "formal"})
-        force_authenticate(request, user=user)
-        response = view(request, pk=basic_faq.id)
+        response = authenticated_client.patch(url, {"content": "Updated", "tone": "formal"})
 
         assert response.data["content"] == "Updated"
         assert response.data["tone"] != basic_faq.tone
         assert response.status_code == status.HTTP_200_OK
 
-    def test_create_faq_success(self, user, api_factory):
+    def test_create_faq_success(self, user, authenticated_client):
         """Test creating faq."""
         payload = {"content": "content", "tone": "formal", "number_of_faqs": 1}
-        view = FAQViewSet.as_view({"post": "create"})
-        request = api_factory.post(reverse("faq-list"), payload, format="json")
-        force_authenticate(request, user=user)
-        response = view(request)
+        response = authenticated_client.post(reverse("faq-list"), payload, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["user"] == user.id
@@ -67,3 +50,12 @@ class TestFAQViewSet:
         assert response.data["tone"] == payload["tone"]
         assert response.data["number_of_faqs"] == payload["number_of_faqs"]
         assert len(response.data["generated_faqs"]) == payload["number_of_faqs"]
+
+    def test_download_faq(self, basic_faq, authenticated_client):
+        """Test downloading FAQ as pdf."""
+        url = reverse("faq-download", kwargs={"pk": basic_faq.id})
+        response = authenticated_client.get(url)
+
+        assert response.status_code == 200
+        assert response["Content-Type"] == "application/pdf"
+        assert response["Content-Disposition"] == f'attachment; filename="faq_{basic_faq.id}.pdf"'
