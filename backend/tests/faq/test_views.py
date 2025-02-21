@@ -1,4 +1,8 @@
+import os
+
 import pytest
+from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 
@@ -59,3 +63,45 @@ class TestFAQViewSet:
         assert response.status_code == 200
         assert response["Content-Type"] == "application/pdf"
         assert response["Content-Disposition"] == f'attachment; filename="faq_{basic_faq.id}.pdf"'
+
+    def test_upload_pdf(self, authenticated_client):
+        """Test uploading pdf."""
+        url = reverse("faq-upload-pdf")
+
+        # Load the real PDF file
+        pdf_path = os.path.join(settings.BASE_DIR, "tests/samples/test_pdf_upload.pdf")
+        with open(pdf_path, "rb") as pdf_file:
+            pdf_data = pdf_file.read()
+
+        # Create a SimpleUploadedFile instance
+        pdf_file = SimpleUploadedFile("test_pdf_upload.pdf", pdf_data, content_type="application/pdf")
+
+        response = authenticated_client.post(url, {"file": pdf_file}, format="multipart")
+
+        assert response.status_code == 200, response.data
+        assert "content" in response.data
+
+    def test_upload_pdf_empty_file(self, authenticated_client):
+        """Test uploading empty pdf with payload."""
+
+        url = reverse("faq-upload-pdf")
+        response = authenticated_client.post(url, format="multipart")
+
+        assert response.status_code == 400
+        assert response.data == {
+            "type": "validation_error",
+            "errors": [{"code": "required", "detail": "No file was submitted.", "attr": "file"}],
+        }
+
+    def test_upload_non_pdf_file(self, authenticated_client):
+        """Test uploading non-PDF file."""
+        url = reverse("faq-upload-pdf")
+        text_file = SimpleUploadedFile("test.txt", b"Hello World", content_type="text/plain")
+
+        response = authenticated_client.post(url, {"file": text_file}, format="multipart")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data == {
+            "type": "validation_error",
+            "errors": [{"code": "invalid", "detail": "File must be a PDF", "attr": "file"}],
+        }
