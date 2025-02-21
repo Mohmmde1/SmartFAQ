@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient, APIRequestFactory
 
 from faq.models import FAQ, QuestionAnswer
+from faq.serializers import QuestionAnswerSerializer
 
 User = get_user_model()
 
@@ -66,3 +67,9 @@ def authenticated_client(api_client, user):
     """Return authenticated APIClient."""
     api_client.force_authenticate(user=user)
     return api_client
+
+
+@pytest.fixture
+def qa_serialized(question_answer):
+    """Serialized question answer."""
+    return QuestionAnswerSerializer(question_answer)
