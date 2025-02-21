@@ -25,12 +25,6 @@ class FAQSerializer(serializers.ModelSerializer):
     number_of_faqs = serializers.IntegerField(min_value=1, max_value=20, default=5)
     tone = serializers.ChoiceField(choices=["neutral", "formal", "casual"], default="neutral")
 
-    def validate_content(self, value: str) -> str:
-        """Validate content field."""
-        if not value.strip():
-            raise ValidationError("Content cannot be empty")
-        return value.strip()
-
     class Meta:
         model = FAQ
         fields = [
@@ -49,17 +43,17 @@ class FAQSerializer(serializers.ModelSerializer):
 
 class DailyTrendSerializer(serializers.Serializer):
     day = serializers.CharField()
-    count = serializers.IntegerField()
+    count = serializers.IntegerField(min_value=0)
 
 
 class ToneSerializer(serializers.Serializer):
     tone = serializers.CharField()
-    value = serializers.IntegerField()
+    value = serializers.IntegerField(min_value=0)
 
 
 class FAQStatisticsSerializer(serializers.Serializer):
-    total_faqs = serializers.IntegerField()
-    total_questions = serializers.IntegerField()
+    total_faqs = serializers.IntegerField(min_value=0)
+    total_questions = serializers.IntegerField(min_value=0)
     avg_questions_per_faq = serializers.FloatField()
     last_faq_created = FAQSerializer(read_only=True)
     daily_trends = DailyTrendSerializer(many=True)
