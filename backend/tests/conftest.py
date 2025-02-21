@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from rest_framework.test import APIRequestFactory
 
 from faq.models import FAQ, QuestionAnswer
 
@@ -46,3 +47,9 @@ def faq_queryset(faq_with_qa):
         faq_with_qa.id = None
         faq_with_qa.save()
     return FAQ.objects.all()
+
+
+@pytest.fixture
+def api_factory():
+    """Return APIRequestFactory instance."""
+    return APIRequestFactory()
