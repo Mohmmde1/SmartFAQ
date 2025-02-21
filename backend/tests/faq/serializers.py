@@ -31,6 +31,14 @@ class TestQuestionAnswerSerializer:
         assert "id" not in validated_data
         assert set(validated_data.keys()) == set(["answer", "question"])
 
+    def test_qa_required(self):
+        """Test required fields in qa."""
+        data = {}
+        serialized = QuestionAnswerSerializer(data=data)
+
+        assert not serialized.is_valid()
+        assert {"question", "answer"} == set(serialized.errors.keys())
+
 
 @pytest.mark.django_db
 class TestFAQSerializer:
