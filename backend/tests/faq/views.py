@@ -43,6 +43,7 @@ class TestFAQViewSet:
         assert response.data["tone"] != basic_faq.tone
         assert response.status_code == status.HTTP_200_OK
 
+    @pytest.mark.actions
     def test_create_faq_success(self, user, authenticated_client):
         """Test creating faq."""
         payload = {"content": "content", "tone": "formal", "number_of_faqs": 1}

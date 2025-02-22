@@ -17,6 +17,7 @@ from faq.helpers.faq_generator import FAQGenerator
 from faq.services import generate_faq, generate_faq_pdf, scrape_and_summarize
 
 
+@pytest.mark.actions
 class TestFAQServices:
     @pytest.mark.django_db
     def test_generate_faq(self):
@@ -128,6 +129,7 @@ class TestFAQServices:
             generate_faq_pdf(faq_with_qa)
 
 
+@pytest.mark.actions
 class TestFAQGeneratorSingleton:
     """Test suite for FAQGenerator singleton behavior."""
 

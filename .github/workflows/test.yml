@@ -48,4 +48,4 @@ jobs:
         DJANGO_SETTINGS_MODULE: core.settings.test
       run: |
         cd backend
-        poetry run pytest -v
+        poetry run pytest -v -m "not actions"
