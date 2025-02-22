@@ -76,23 +76,23 @@ class PdfSerializer(serializers.Serializer):
     file = serializers.FileField(write_only=True)
     content = serializers.CharField(read_only=True)
 
-    def validate_file(self, value):
+    def validate_file(self, file):
         """Validate PDF file constraints."""
-        if not value or value.size == 0:
+        if not file or file.size == 0:
             raise ValidationError("PDF file is empty")
 
-        if value.size > 10 * 1024 * 1024:  # 10MB
+        if file.size > 10 * 1024 * 1024:  # 10MB
             raise ValidationError("PDF file size must be less than 10MB")
 
-        if not value.name.endswith(".pdf"):
+        if not file.name.endswith(".pdf"):
             raise ValidationError("File must be a PDF")
 
         try:
-            value.seek(0)
-            pdf_reader = PdfReader(value)
+            file.seek(0)
+            pdf_reader = PdfReader(file)
             if len(pdf_reader.pages) > 50:
                 raise ValidationError("PDF must not exceed 50 pages")
-            value.seek(0)
-            return value
+            file.seek(0)
+            return file
         except Exception as err:
             raise ValidationError(f"Invalid PDF file: {str(err)}") from err
