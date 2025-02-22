@@ -1,0 +1,51 @@
+name: Tests
+
+on:
+  push:
+    branches: [ test/unit-testing ]
+  pull_request:
+    branches: [ test/unit-testing ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        poetry install --no-interaction
+
+    - name: Run tests
+      env:
+        DJANGO_SETTINGS_MODULE: core.settings.test
+      run: |
+        cd backend
+        poetry run pytest -v
