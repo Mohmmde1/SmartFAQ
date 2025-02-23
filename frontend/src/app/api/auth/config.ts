@@ -72,11 +72,11 @@ export const authOptions = {
                         if (error.response?.status === 401) {
                             return null; // NextAuth will handle redirect
                         }
-
+                        const message = error.response?.data?.errors?.at(0)?.detail || 'Invalid credentials';
                         // Validation errors (400)
                         if (error.response?.status === 400) {
                             throw new AppError(
-                                'Invalid credentials',
+                                message,
                                 'INVALID_CREDENTIALS',
                                 error.response.data
                             );
