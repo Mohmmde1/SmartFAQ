@@ -38,8 +38,6 @@ OAUTH_CALLBACK_URL = "http://testserver"
 GOOGLE_CLIENT_ID = "test-client-id"
 GOOGLE_CLIENT_SECRET = "test-client-secret"
 
-# Mock AI Settings
-OLLAMA_MODEL = "test-model"
 
 # Use in-memory cache for tests
 CACHES = {
