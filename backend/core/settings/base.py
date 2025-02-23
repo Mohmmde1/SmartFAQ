@@ -198,6 +198,7 @@ REST_USE_JWT = True
 REST_AUTH = {
     "USE_JWT": True,
     "JWT_AUTH_HTTPONLY": False,  # Important for the frontend to access the refresh token
+    "REGISTER_SERIALIZER": "auths.serializers.CustomRegisterSerializer",
 }
 
 ###############################################################################
