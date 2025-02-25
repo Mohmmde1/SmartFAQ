@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
         const data: PaginatedResponse<FAQ> = response.data;
         return NextResponse.json(data, { status: 200 });
     } catch (error: any) {
+        console.error("An error during call: ", error);
         if (axios.isAxiosError(error)) {
             if (error.response?.data?.detail === 'Invalid page.') {
                 return NextResponse.json({

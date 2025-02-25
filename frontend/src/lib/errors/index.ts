@@ -1,4 +1,4 @@
-import { ApiError } from '@/types/api';
+import { ApiErrorReponse, ClientApiError } from '@/types/api';
 
 export class AppError extends Error {
     public code: string;
@@ -12,12 +12,13 @@ export class AppError extends Error {
     }
 }
 
-export const handleAxiosError = (error: any): ApiError => {
+export const handleAxiosError = (error: any): ClientApiError => {
     if (error.response?.data) {
+        const responseError:ApiErrorReponse = error.response?.data;
+        const detail = responseError.errors?.at(0)?.detail;
         return {
             code: `HTTP_${error.response.status}`,
-            message: error.response.data.message || 'An error occurred',
-            details: error.response.data
+            message: detail || 'An error occurred'
         };
     }
 

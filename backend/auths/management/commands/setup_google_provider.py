@@ -1,4 +1,5 @@
 from allauth.socialaccount.models import SocialApp
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
@@ -21,12 +22,12 @@ class Command(BaseCommand):
         """
         Define the arguments required for the management command.
         """
-        parser.add_argument("--name", "-n", required=True, help="Project name for the SocialApp.")
-        parser.add_argument("--client_id", "-ci", required=True, help="Client ID for the Google app.")
+        parser.add_argument("--name", "-n", required=False, help="Project name for the SocialApp.")
+        parser.add_argument("--client_id", "-ci", required=False, help="Client ID for the Google app.")
         parser.add_argument(
             "--secret_key",
             "-sk",
-            required=True,
+            required=False,
             help="Secret key for the Google app.",
         )
         parser.add_argument(
@@ -45,19 +46,18 @@ class Command(BaseCommand):
         sid = transaction.savepoint()
         try:
             # Extract options
-            name = options["name"]
-            client_id = options["client_id"]
-            secret_key = options["secret_key"]
+            name = options["name"] if options["name"] else "Google OAuth"
+            client_id = options["client_id"] if options["client_id"] else settings.GOOGLE_CLIENT_ID
+            secret_key = options["secret_key"] if options["secret_key"] else settings.GOOGLE_CLIENT_SECRET
             commit = options["commit"]
 
+            if not client_id or not secret_key:
+                raise ValueError("Secret key and client id must be set!")
+            
             provider = "google"
             self.stdout.write(f"Using provider: {provider}")
 
-            # Step 1: Clear existing SocialApps for the provider
-            SocialApp.objects.filter(provider=provider).delete()
-            self.stdout.write(f"Deleted all existing SocialApps for provider '{provider}'.")
-
-            # Step 2: Create or update SocialApp
+            # Create or update SocialApp
             sa_obj, created = SocialApp.objects.get_or_create(provider=provider)
             sa_obj.name = name
             sa_obj.client_id = client_id
@@ -65,7 +65,7 @@ class Command(BaseCommand):
             sa_obj.save()
             self.stdout.write(f"{'Created' if created else 'Updated'} SocialApp: {name}")
 
-            # Step 3: Associate SocialApp with the first site
+            # Associate SocialApp with the first site
             site_obj = Site.objects.first()
             if not site_obj:
                 raise ValueError("No sites found. Please create a Site object before running this command.")

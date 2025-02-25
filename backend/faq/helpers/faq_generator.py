@@ -1,12 +1,13 @@
 import logging
 from dataclasses import dataclass
+from threading import Lock
 from typing import List
 
 import ollama
 from django.conf import settings
 from pydantic import BaseModel, Field
 
-from .models import QuestionAnswer
+from ..models import QuestionAnswer
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +34,34 @@ class FAQPrompt:
 
 
 class FAQGenerator:
-    def __init__(self, model_name: str = settings.OLLAMA_MODEL):
-        """Initialize FAQ Generator with specified model."""
-        self.model_name = model_name
+    """
+    Singleton class for generating FAQs using AI.
+    Thread-safe implementation using double-checked locking pattern.
+    """
+
+    _instance = None
+    _lock = Lock()
+
+    def __new__(cls):
+        if not cls._instance:
+            with cls._lock:
+                # Double check to prevent race condition
+                if not cls._instance:
+                    cls._instance = super().__new__(cls)
+                    # Initialize any expensive resources here
+                    cls._instance._initialize()
+        return cls._instance
+
+    def _initialize(self):
+        """Initialize expensive resources once."""
+        # Initialize AI model or other expensive resources
+        self._model = settings.OLLAMA_MODEL
+        self._is_initialized = False
+
+    def __init__(self):
+        # This will only run once due to __new__
+        if not getattr(self, "_is_initialized", False):
+            self._is_initialized = True
 
     def generate_faqs(self, text: str, num_questions: int = 5, tone: str = "neutral") -> List[QuestionAnswer]:
         """
@@ -64,7 +90,7 @@ class FAQGenerator:
             content = FAQPrompt.TEMPLATE.format(num_questions=num_questions, tone=tone, text=text)
 
             response = ollama.chat(
-                model=self.model_name, messages=[{"role": "user", "content": content}], format=FAQ.model_json_schema()
+                model=self._model, messages=[{"role": "user", "content": content}], format=FAQ.model_json_schema()
             )
 
             question_answer = FAQ.model_validate_json(response.message.content)

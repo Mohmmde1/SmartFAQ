@@ -4,6 +4,181 @@
     <meta charset="UTF-8">
     <title>{{ faq.title }}</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #4f46e5;
+            --text-color: #1f2937;
+            --bg-light: #f3f4f6;
+            --bg-highlight: #eff6ff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            color: var(--text-color);
+            margin: 2rem;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .logo {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .title {
+            font-size: 2rem;
+            margin: 1rem 0;
+        }
+
+        .metadata {
+            display: flex;
+            gap: 1.5rem;
+            color: #6b7280;
+        }
+
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content {
+            background: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .content-header {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .question-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+        }
+
+        .answer-wrapper {
+            background: var(--bg-highlight);
+            border-radius: 12px;
+            margin-left: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+        }
+
+        .question, .answer {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .question-icon, .answer-icon {
+            font-size: 1.25rem;
+            font-weight: 700;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .question-icon {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .answer-icon {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            margin-left: 3.5rem;
+        }
+
+        .tag {
+            background: var(--bg-light);
+            color: var(--primary-color);
+            padding: 0.25rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .highlights {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .highlight-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .highlights ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .highlights li {
+            margin-bottom: 0.25rem;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--bg-light);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .footer-logo {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        @page {
+            @bottom-right {
+                content: counter(page);
+            }
+            margin: 2cm;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
