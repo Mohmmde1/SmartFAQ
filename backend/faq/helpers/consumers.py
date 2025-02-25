@@ -152,7 +152,7 @@ class FAQConsumer(AsyncWebsocketConsumer):
 
             # Add timeout to handle_faq_generation
             try:
-                timeout_seconds = 60
+                timeout_seconds = 120
                 await asyncio.wait_for(
                     self.handle_faq_generation(
                         validated_data["content"], validated_data["number_of_faqs"], validated_data["tone"]
