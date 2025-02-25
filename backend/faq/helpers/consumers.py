@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from ..models import FAQ, QuestionAnswer
@@ -54,8 +55,6 @@ class FAQManager:
 
 
 class FAQConsumer(AsyncWebsocketConsumer):
-    INACTIVITY_TIME = 60
-
     @sync_to_async
     def serialize_question_answer(self, qa: QuestionAnswer) -> dict:
         serializer = QuestionAnswerSerializer(qa)
@@ -77,7 +76,8 @@ class FAQConsumer(AsyncWebsocketConsumer):
 
             self.faq_manager = FAQManager(self.user)
             self.faq = None
-            # self.inactive_task = asyncio.create_task(self.close_on_inactivity())
+            if settings.INACTIVITY_TIME_ENABLED:
+                self.inactive_task = asyncio.create_task(self.close_on_inactivity())
             await self.accept()
 
         except Exception as e:
@@ -87,7 +87,7 @@ class FAQConsumer(AsyncWebsocketConsumer):
     async def close_on_inactivity(self):
         """Closes WebSocket after a period of inactivity."""
         try:
-            await asyncio.sleep(self.INACTIVITY_TIME)
+            await asyncio.sleep(settings.INACTIVITY_TIME)
             logger.info("Closing WebSocket due to inactivity")
             await self.send_error("Connection closed due to inactivity.")
             await self.close()
