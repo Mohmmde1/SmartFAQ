@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from dataclasses import dataclass
@@ -5,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from ..models import FAQ, QuestionAnswer
@@ -74,11 +76,23 @@ class FAQConsumer(AsyncWebsocketConsumer):
 
             self.faq_manager = FAQManager(self.user)
             self.faq = None
+            if settings.INACTIVITY_TIME_ENABLED:
+                self.inactive_task = asyncio.create_task(self.close_on_inactivity())
             await self.accept()
 
         except Exception as e:
             logger.error(f"Connection error: {str(e)}", exc_info=True)
             await self.close()
+
+    async def close_on_inactivity(self):
+        """Closes WebSocket after a period of inactivity."""
+        try:
+            await asyncio.sleep(settings.INACTIVITY_TIME)
+            logger.info("Closing WebSocket due to inactivity")
+            await self.send_error("Connection closed due to inactivity.")
+            await self.close()
+        except asyncio.CancelledError:
+            pass
 
     async def handle_faq_generation(self, text: str, num_questions: int, tone: str) -> None:
         try:
@@ -136,9 +150,18 @@ class FAQConsumer(AsyncWebsocketConsumer):
                 self.faq, validated_data["content"], validated_data["number_of_faqs"], validated_data["tone"]
             )
 
-            await self.handle_faq_generation(
-                validated_data["content"], validated_data["number_of_faqs"], validated_data["tone"]
-            )
+            # Add timeout to handle_faq_generation
+            try:
+                timeout_seconds = 60
+                await asyncio.wait_for(
+                    self.handle_faq_generation(
+                        validated_data["content"], validated_data["number_of_faqs"], validated_data["tone"]
+                    ),
+                    timeout=timeout_seconds,
+                )
+            except asyncio.TimeoutError:
+                logger.error("FAQ generation timed out")
+                await self.send_error("FAQ generation took too long and was stopped.")
 
         except Exception as e:
             logger.error(f"Error in receive: {str(e)}", exc_info=True)

@@ -34,7 +34,7 @@ export default function SmartFAQ() {
     const [error, setError] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
 
-    const { socket, isConnected, sendMessage } = useWebSocket();
+    const { socket, isConnected, sendMessage, websocketError } = useWebSocket();
 
     useEffect(() => {
         const fetchFaq = async () => {
@@ -107,6 +107,7 @@ export default function SmartFAQ() {
                     case 'error':
                         setError(data.message || 'An error occurred');
                         setIsLoading(false);
+                        setIsGenerating(false);
                         toast.error(data.message);
                         break;
                 }

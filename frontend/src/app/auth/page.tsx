@@ -13,9 +13,12 @@ import { toast } from "sonner"
 import { SignUpFormData } from '@/types/auth'
 import { AppError } from '@/lib/errors';
 import { LoginRequestBody } from '@/types/api'
+import { useRouter } from 'next/navigation'
 
 export default function AuthPage() {
+    const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
+
     const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         setIsLoading(true)
@@ -47,12 +50,9 @@ export default function AuthPage() {
             }
 
             toast.success("Registration successful!")
-            // Auto sign in after registration
-            await signIn('credentials', {
-                email: data.email,
-                password: data.password1,
-                callbackUrl: '/'
-            })
+            router.push("/")
+            toast.info("Please do check your email for verficaiton!")
+
         } catch (error) {
             if (error instanceof AppError) {
                 toast.error(error.message);
@@ -88,7 +88,7 @@ export default function AuthPage() {
 
             if (result?.error) {
                 console.log('Login failed:', result.error)
-                throw new Error('Login failed')
+                throw new Error(result.error)
             }
 
             if (result?.ok) {
@@ -97,7 +97,7 @@ export default function AuthPage() {
             }
         } catch (error) {
             console.log('Error logging in:', error)
-            toast.error('Invalid credentials')
+            toast.error(error instanceof Error ? error.message : 'Invalid credentials')
 
         } finally {
             setIsLoading(false)

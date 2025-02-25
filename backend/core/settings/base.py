@@ -119,8 +119,14 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "none"
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# Email verification setup
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 ###############################################################################
 # Internationalization Settings
@@ -179,7 +185,7 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 SOCIALACCOUNT_EMAIL_REQUIRED = False
-SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_ADAPTER = "auths.adapter.CustomSocialAccountAdapter"
 
 ###############################################################################
 # JWT Settings
@@ -192,6 +198,7 @@ REST_USE_JWT = True
 REST_AUTH = {
     "USE_JWT": True,
     "JWT_AUTH_HTTPONLY": False,  # Important for the frontend to access the refresh token
+    "REGISTER_SERIALIZER": "auths.serializers.CustomRegisterSerializer",
 }
 
 ###############################################################################
@@ -279,3 +286,9 @@ CHANNEL_LAYERS = {
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+###############################################################################
+# FAQ settings
+###############################################################################
+INACTIVITY_TIME_ENABLED = False
+INACTIVITY_TIME = 60
