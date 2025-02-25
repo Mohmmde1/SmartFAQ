@@ -34,9 +34,6 @@ GOOGLE_CLIENT_SECRET = "<your-google-client-secret>"
 # JWT Settings
 JWT_SECRET_KEY = SECRET_KEY  # You can use a different key if needed
 
-# AI Model Settings
-OLLAMA_MODEL = "<your-ollama-model>"  # e.g., "gemma", "llama2", "mistral"
-
 # Simple JWT Settings
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
@@ -47,6 +44,8 @@ SIMPLE_JWT = {
     "SIGNING_KEY": JWT_SECRET_KEY,
     "ALGORITHM": "HS256",
 }
+
+CSRF_TRUSTED_ORIGINS = ["http://localhost", "https://localhost", "http://127.0.0.1", "https://127.0.0.1"]
 
 # Optional Settings (uncomment if needed)
 # ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = "<your-frontend-login-url>"

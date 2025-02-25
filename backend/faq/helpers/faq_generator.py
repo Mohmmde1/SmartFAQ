@@ -55,7 +55,7 @@ class FAQGenerator:
     def _initialize(self):
         """Initialize expensive resources once."""
         # Initialize AI model or other expensive resources
-        self._model = settings.OLLAMA_MODEL  # Your AI model initialization
+        self._model = settings.OLLAMA_MODEL
         self._is_initialized = False
 
     def __init__(self):
