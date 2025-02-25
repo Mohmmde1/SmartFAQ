@@ -65,4 +65,5 @@ logs/
 
 # Secret settings
 secret.py
+secret_*.py
 !secret_template.py
