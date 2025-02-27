@@ -1,5 +1,7 @@
 # SmartFAQ
 
+![SmartFAQ Demo](smart_faq_demo.gif)
+
 An AI-powered application to automatically generate FAQs from PDFs, docs, and text.
 
 ## Prerequisites
